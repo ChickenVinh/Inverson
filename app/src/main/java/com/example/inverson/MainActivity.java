@@ -38,11 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
         loginButton.setOnClickListener(new View.OnClickListener(){  //ActionListener für Button loginButton
             public void onClick(View view){
-                if(isMapsOK()) {
-                    loginID.setText("Anja stinks"); //LOGIN
-                    Intent intent = new Intent(MainActivity.this, MapActivity.class);
-                    startActivity(intent);
-                }
+                isMapsOK();
+                login(loginID.getText().toString(), loginPassword.getText().toString());
             }
         });
     }
@@ -99,5 +96,12 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "you can't make map requests", Toast.LENGTH_SHORT).show();
         }
         return false;
+    }
+
+    public void login(String user, String pwd){
+        if(user.equals("admin") && pwd.equals("1234")){
+            Intent intent = new Intent(MainActivity.this, MapActivity.class);
+            startActivity(intent);
+        }
     }
 }
