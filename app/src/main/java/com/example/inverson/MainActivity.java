@@ -38,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
 
         loginButton.setOnClickListener(new View.OnClickListener(){  //ActionListener für Button loginButton
             public void onClick(View view){
-                isMapsOK();
                 login(loginID.getText().toString(), loginPassword.getText().toString());
             }
         });
@@ -100,8 +99,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void login(String user, String pwd){
         if(user.equals("admin") && pwd.equals("1234")){
+            isMapsOK();
             Intent intent = new Intent(MainActivity.this, MapActivity.class);
             startActivity(intent);
+        }else{
+            Toast.makeText(MainActivity.this, "Access denied!", Toast.LENGTH_SHORT).show();
         }
     }
 }
