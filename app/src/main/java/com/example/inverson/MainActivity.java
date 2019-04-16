@@ -83,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
         if (available == ConnectionResult.SUCCESS) {
             //version is correct, user can continue with maps
             Log.d(TAG, "isMapsOK: Google Play Services is working");
-            Toast.makeText(this, "Google Maps version OK", Toast.LENGTH_SHORT).show();
             return true;
         } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
             //fixable error occured

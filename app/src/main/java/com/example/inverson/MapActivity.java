@@ -2,6 +2,7 @@ package com.example.inverson;
 
 import android.*;
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -235,4 +236,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
+
+    public void launchSecondActivity(View view) {
+        Log.d(TAG, "Button clicked!");
+        Intent intent = new Intent(this, DetailActivity.class);
+        startActivity(intent);
+    }
+
 }

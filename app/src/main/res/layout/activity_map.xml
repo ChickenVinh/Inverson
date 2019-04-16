@@ -58,21 +58,13 @@
         android:src="@drawable/ic_gps"/>
 
     <Button
-        android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/map"
-        android:layout_alignLeft="@+id/map"
-        android:layout_alignTop="@+id/relLayout1"
-        android:layout_alignEnd="@+id/relLayout1"
-        android:layout_alignRight="@+id/relLayout1"
+        android:text="next Activity"
+        android:id="@+id/button_map"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="157dp"
-        android:layout_marginLeft="157dp"
-        android:layout_marginTop="333dp"
-        android:layout_marginEnd="156dp"
-        android:layout_marginRight="156dp"
-        android:layout_marginBottom="340dp"
-        android:text="Button" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:onClick="launchSecondActivity"/>
 
 </RelativeLayout>
