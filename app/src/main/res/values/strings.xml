@@ -1,4 +1,14 @@
 <resources>
-    <string name="app_name">Inverson</string>
-    <string name="title_activity_detail">DetailActivity</string>
+    <string name="app_name">Iverson</string>
+    <string name="title_activity_maps">Map</string>
+    <!--<string name="title_activity_login">Sign in</string> -->
+    <!-- Strings related to login -->
+    <string name="prompt_email">User</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Login</string>
+    <string name="action_sign_in_short">Login</string>
+    <string name="error_invalid_email">This Username is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
 </resources>
