@@ -20,7 +20,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
- * A login screen that offers login via email/password.
+ * A login screen that offers login via user/password.
  */
 public class LoginActivity extends AppCompatActivity {
 
