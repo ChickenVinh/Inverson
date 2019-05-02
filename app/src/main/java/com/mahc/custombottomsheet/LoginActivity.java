@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -16,6 +17,13 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -223,6 +231,9 @@ public class LoginActivity extends AppCompatActivity {
 
             if (success) {  //Successfull Login
                 finish();
+                //download Markers
+
+                //start Map Activity
                 Intent suc = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(suc);
             } else {
@@ -237,5 +248,6 @@ public class LoginActivity extends AppCompatActivity {
             showProgress(false);
         }
     }
+
 }
 
