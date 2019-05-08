@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -73,24 +74,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
         bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
         behavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
+        final RelativeLayout searchbar = coordinatorLayout.findViewById(R.id.Searchbar);
         behavior.addBottomSheetCallback(new BottomSheetBehaviorGoogleMapsLike.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 switch (newState) {
                     case BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED:
                         Log.d("bottomsheet-", "STATE_COLLAPSED");
+                        searchbar.setVisibility(View.VISIBLE);
                         break;
                     case BottomSheetBehaviorGoogleMapsLike.STATE_DRAGGING:
                         Log.d("bottomsheet-", "STATE_DRAGGING");
                         break;
                     case BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED:
                         Log.d("bottomsheet-", "STATE_EXPANDED");
+                        searchbar.setVisibility(View.GONE);
                         break;
                     case BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT:
                         Log.d("bottomsheet-", "STATE_ANCHOR_POINT");
+                        searchbar.setVisibility(View.VISIBLE);
                         break;
                     case BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN:
                         Log.d("bottomsheet-", "STATE_HIDDEN");
+                        searchbar.setVisibility(View.VISIBLE);
                         break;
                     default:
                         Log.d("bottomsheet-", "STATE_SETTLING");
@@ -147,44 +153,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,5.5f));
     }
 
-    public static class Antenna implements ClusterItem {
-        private final LatLng mPosition;
-        private final String mTitle;
-        private final String mSnippet;
 
-        public Antenna(double lat, double lng) {
-            mPosition = new LatLng(lat, lng);
-            mTitle = null;
-            mSnippet = null;
-        }
-
-        public Antenna(double lat, double lng, String title, String snippet) {
-            mPosition = new LatLng(lat, lng);
-            mTitle = title;
-            mSnippet = snippet;
-        }
-        @Override
-        public LatLng getPosition() {
-            return mPosition;
-        }
-        @Override
-        public String getTitle() {
-            return mTitle;
-        }
-
-        @Override
-        public String getSnippet() {
-            return mSnippet;
-        }
-    }
 
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
         TextView Title = (TextView)findViewById(R.id.bottom_sheet_title);
-        TextView Address = (TextView)findViewById(R.id.bottom_sheet_subtitle);
+        TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
+        TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
 
-        Title.setText(item.mTitle);
-        Address.setText(item.mSnippet);
+        extTitle.setText(item.getExtTitle());
+        Title.setText(item.getTitle());
+        Address.setText(item.getAddress());
 
     }
     public void parsePins(ArrayList<String> tmp) {
@@ -196,13 +175,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             String[] lineArr = line.split(csvDelimiter);
             try {
                 String ID = lineArr[0];
+                String extID = lineArr[1];
                 String Address = lineArr[3] + ", " + lineArr[4] + ", " + lineArr[5];
                 String klat = lineArr[7].replace(',', '.');
                 String klong = lineArr[6].replace(',', '.');
 
                 if (!klat.equalsIgnoreCase("#NV") && !klong.equalsIgnoreCase("#NV")) {
                     //Create Antenna and add to Collection
-                    Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address);
+                    Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address, extID);
 
                     AntennaCollection.add(tmp_ant);
                     mClusterManager.addItem(tmp_ant);
@@ -291,7 +271,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override protected void onBeforeClusterItemRendered(Antenna item,
                                                              MarkerOptions markerOptions) {
-            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.mTitle);
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
         }
     }
 }

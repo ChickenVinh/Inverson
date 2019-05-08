@@ -9,37 +9,7 @@
     android:fitsSystemWindows="true"
     tools:context="com.mahc.custombottomsheet.MainActivity">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginLeft="10dp"
-        android:elevation="10dp"
-        android:id="@+id/relLayout1"
-        android:background="@color/common_google_signin_btn_text_dark_default">
 
-        <ImageView
-            android:id="@+id/ic_magnify"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="10dp"
-            android:src="@drawable/ic_magnify" />
-
-        <EditText
-            android:id="@+id/input_search"
-            android:layout_width="331dp"
-            android:layout_height="match_parent"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="16dp"
-            android:layout_toRightOf="@+id/ic_magnify"
-            android:background="@null"
-            android:hint="Enter ID, Address or City"
-            android:imeOptions="actionSearch"
-            android:textColor="#000"
-            android:textSize="15sp" />
-    </RelativeLayout>
     <fragment
         xmlns:map="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -69,6 +39,37 @@
             android:fitsSystemWindows="true"/>
     </androidx.core.widget.NestedScrollView>
 
+    <RelativeLayout
+        android:id="@+id/Searchbar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@color/common_google_signin_btn_text_dark_default"
+        android:elevation="10dp">
+
+        <ImageView
+            android:id="@+id/ic_magnify"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/ic_magnify" />
+
+        <EditText
+            android:id="@+id/input_search"
+            android:layout_width="331dp"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"
+            android:layout_toRightOf="@+id/ic_magnify"
+            android:background="@null"
+            android:hint="Enter ID, Address or City"
+            android:imeOptions="actionSearch"
+            android:textColor="#000"
+            android:textSize="15sp" />
+    </RelativeLayout>
     <!--
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="wrap_content"
