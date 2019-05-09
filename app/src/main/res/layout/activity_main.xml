@@ -49,20 +49,21 @@
         android:background="@color/common_google_signin_btn_text_dark_default"
         android:elevation="10dp">
 
-        <ImageView
+        <ImageButton
             android:id="@+id/ic_magnify"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_centerVertical="true"
             android:layout_marginLeft="10dp"
+            android:background="@color/transparent"
             android:src="@drawable/ic_magnify" />
 
         <EditText
             android:id="@+id/input_search"
-            android:layout_width="331dp"
+            android:layout_width="329dp"
             android:layout_height="match_parent"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="16dp"
+            android:layout_marginLeft="3dp"
             android:layout_toRightOf="@+id/ic_magnify"
             android:background="@null"
             android:hint="Enter ID, Address or City"

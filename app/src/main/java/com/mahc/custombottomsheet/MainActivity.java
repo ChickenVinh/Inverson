@@ -20,6 +20,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -155,6 +156,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
+
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(new LatLng(item.getPosition().latitude - 0.05,item.getPosition().longitude))
+                .zoom(12).build();
+        //Zoom in and animate the camera.
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.dummy_antenne);
         RoundedBitmapDrawable roundedPic = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
         final float roundPx = (float) bitmap.getWidth() * 0.06f;
