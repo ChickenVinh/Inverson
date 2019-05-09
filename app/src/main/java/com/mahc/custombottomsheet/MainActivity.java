@@ -5,10 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -19,13 +19,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.clustering.Cluster;
-import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
@@ -37,10 +34,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.fragment.app.FragmentActivity;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -157,10 +155,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.dummy_antenne);
+        RoundedBitmapDrawable roundedPic = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+        final float roundPx = (float) bitmap.getWidth() * 0.06f;
+        roundedPic.setCornerRadius(roundPx);
+
+        ImageView Pic = (ImageView)findViewById(R.id.bottom_sheet_pic);
         TextView Title = (TextView)findViewById(R.id.bottom_sheet_title);
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
 
+
+        Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
