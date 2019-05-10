@@ -12,4 +12,5 @@
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
     <string name="URL_antennas">http://gastroconsultung-catering.com/infos.csv</string>
+    <string name="error_antenna_not_found">Antenna not Found!</string>
 </resources>

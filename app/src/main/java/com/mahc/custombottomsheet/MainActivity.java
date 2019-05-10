@@ -9,11 +9,15 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.InputType;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -24,6 +28,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.MarkerManager;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
@@ -35,6 +40,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
@@ -57,7 +63,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
@@ -116,7 +122,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
         //behavior.setCollapsible(false);
 
+        final TextView searchTextView = (TextView)findViewById(R.id.txt_search);
 
+        searchTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
+                    if(!searchMarker(textView.getText().toString())){
+                        Toast.makeText(getApplicationContext(), getString(R.string.error_antenna_not_found), Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -153,6 +172,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    private boolean searchMarker(String searchtext){
+        for (Antenna ant : AntennaCollection) {
+            String tit = ant.getTitle();
+            String ext = ant.getExtTitle();
+            if(searchtext.length() > 4 && (tit.contains(searchtext) || ext.contains(searchtext))){
+                displayAntenna(ant);
+                return true;
+            }
+        }
+        return false;
+    }
 
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){

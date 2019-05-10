@@ -59,7 +59,7 @@
             android:src="@drawable/ic_magnify" />
 
         <EditText
-            android:id="@+id/input_search"
+            android:id="@+id/txt_search"
             android:layout_width="329dp"
             android:layout_height="match_parent"
             android:layout_centerVertical="true"
@@ -67,9 +67,11 @@
             android:layout_toRightOf="@+id/ic_magnify"
             android:background="@null"
             android:hint="Enter ID, Address or City"
-            android:imeOptions="actionSearch"
+            android:imeOptions="actionDone"
             android:textColor="#000"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:inputType="textImeMultiLine"
+            android:maxLines="1"/>
     </RelativeLayout>
     <!--
         <com.google.android.material.floatingactionbutton.FloatingActionButton
