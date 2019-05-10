@@ -6,19 +6,30 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.fragment.app.FragmentActivity;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,7 +39,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.MarkerManager;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
@@ -40,24 +52,27 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Locale;
 
-import androidx.annotation.NonNull;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
-import androidx.fragment.app.FragmentActivity;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
-
-    private GoogleMap mMap;
+    //CONSTANTS
+    private final int REQUEST_LOCATION_PERMISSION = 1;
+    private static final int DEFAULT_ZOOM = 12;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+
+    private GoogleMap mMap;
     private ClusterManager<Antenna> mClusterManager;
     private ArrayList<Antenna> AntennaCollection = new ArrayList<>();
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehaviorGoogleMapsLike behavior;
+
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +80,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+
+        assert mapFragment != null;
         mapFragment.getMapAsync(this);
 
         //Download Antennas
@@ -72,7 +89,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         downloadFilesTask.execute();
 
         requestCameraPermission();
-
+        requestLocationPermission();
 
         //If we want to listen for states callback
 
@@ -131,6 +148,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     if(!searchMarker(textView.getText().toString())){
                         Toast.makeText(getApplicationContext(), getString(R.string.error_antenna_not_found), Toast.LENGTH_SHORT).show();
                     }
+                    hideSoftKeyboard();
                     return true;
                 }
                 return false;
@@ -174,9 +192,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean searchMarker(String searchtext){
         for (Antenna ant : AntennaCollection) {
-            String tit = ant.getTitle();
-            String ext = ant.getExtTitle();
-            if(searchtext.length() > 4 && (tit.contains(searchtext) || ext.contains(searchtext))){
+            String tit = ant.getTitle().toLowerCase(Locale.ROOT);
+            String ext = ant.getExtTitle().toLowerCase(Locale.ROOT);
+            if(searchtext.length() > 4 && (tit.contains(searchtext.toLowerCase(Locale.ROOT))
+                    || ext.contains(searchtext.toLowerCase(Locale.ROOT)) )){
                 displayAntenna(ant);
                 return true;
             }
@@ -189,7 +208,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(item.getPosition().latitude - 0.05,item.getPosition().longitude))
-                .zoom(12).build();
+                .zoom(DEFAULT_ZOOM).build();
         //Zoom in and animate the camera.
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
@@ -240,6 +259,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<Marker> MarkerList = new ArrayList<Marker>(mClusterManager.getMarkerCollection().getMarkers());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void requestCameraPermission(){
         if (checkSelfPermission(Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -247,6 +267,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     MY_CAMERA_REQUEST_CODE);
         }
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    @AfterPermissionGranted(REQUEST_LOCATION_PERMISSION)
+    public void requestLocationPermission() {
+        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
+        if(EasyPermissions.hasPermissions(this, perms)) {
+            Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
+        }
+    }
+
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
         Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -259,6 +298,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //CAMERA RESULT
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
@@ -266,6 +306,38 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             imageView.setImageBitmap(imageBitmap);
         }
     }
+
+    private void getDeviceLocation(){
+        Log.d("", "getDeviceLocation: getting the devices current location");
+
+        FusedLocationProviderClient mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        try{
+            if(EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)){
+
+                final Task location = mFusedLocationProviderClient.getLastLocation();
+                location.addOnCompleteListener(new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+                        if(task.isSuccessful() && task.getResult() != null) {
+                            Log.d("", "onComplete: found location!");
+                            Location currentLocation = (Location) task.getResult();
+
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM));
+                        }else{
+                            Log.d("", "current location is null");
+                            Toast.makeText(getBaseContext(), "Location not found", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }else{
+                requestLocationPermission();
+            }
+        }catch (SecurityException e){
+            Log.e("", "getDeviceLocation: SecurityException: " +e.getMessage());
+        }
+    }
+
 
     //DOWNLOAD ANTENNA-DATA
     private ArrayList<String> downloadAntennasCSV(){
@@ -301,6 +373,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+
+    public void hideSoftKeyboard(){
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+    }
+
 
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {
