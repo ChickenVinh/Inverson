@@ -16,8 +16,10 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,7 +72,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehaviorGoogleMapsLike behavior;
-
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -154,6 +155,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 return false;
             }
         });
+
+        createSpinner();
+    }
+
+    private void createSpinner() {
+
+            Spinner spinner1 = (Spinner) findViewById(R.id.spinner1);
+            Spinner spinner2 = (Spinner) findViewById(R.id.spinner2);
+            Spinner spinner3 = (Spinner) findViewById(R.id.spinner3);
+            // Create an ArrayAdapter using the string array and a default spinner layout
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                    R.array.status_array, android.R.layout.simple_spinner_item);
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            // Apply the adapter to the spinner
+            spinner1.setAdapter(adapter);
+            spinner2.setAdapter(adapter);
+            spinner3.setAdapter(adapter);
     }
 
     @Override
