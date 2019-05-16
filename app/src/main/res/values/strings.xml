@@ -16,10 +16,10 @@
     <string name="searchbar_hint">Enter ID, Address or City</string>
 
 
-        <string-array name="status_array">
-            <item>Status OK</item>
-            <item>Service Required</item>
+    <string-array name="status_array">
+        <item>Status OK</item>
+        <item>Service Required</item>
 
-        </string-array>
+    </string-array>
 
 </resources>

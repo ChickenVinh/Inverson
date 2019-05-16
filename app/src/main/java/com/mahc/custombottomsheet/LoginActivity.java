@@ -92,7 +92,7 @@ public class LoginActivity extends AppCompatActivity {
         //DEV#####
         mEmailView.setText("admin");
         mPasswordView.setText("admin");
-        attemptLogin();
+        //attemptLogin();
     }
 
     /**
