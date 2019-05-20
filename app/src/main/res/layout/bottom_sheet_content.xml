@@ -135,15 +135,15 @@
                 android:id="@+id/establecimiento_share_button"
                 android:layout_width="70dp"
                 android:layout_height="60dp"
-                android:src="@android:drawable/ic_menu_share"
                 android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_directions" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:text="Share"
+                android:text="    Route"
                 android:textColor="@android:color/black" />
         </RelativeLayout>
     </LinearLayout>
@@ -151,78 +151,109 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="261dp"
+        android:layout_height="300dp"
         android:layout_alignParentStart="true"
         android:background="@drawable/border_bottom">
 
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"></LinearLayout>
+
         <ImageView
-            android:id="@+id/establecimiento_icon_sucursales"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/obj1_pic"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="13dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="16dp"
-            app:srcCompat="@android:drawable/ic_secure" />
+            android:background="@color/transparent"
+            app:srcCompat="@drawable/ic_dummy1"
+            tools:srcCompat="@drawable/ic_dummy1" />
 
+
+        <ImageView
+            android:id="@+id/obj2_pic"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_below="@+id/obj1_pic"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="16dp"
+            app:srcCompat="@drawable/ic_dummy2" />
+
+        <ImageView
+            android:id="@+id/obj3_pic"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_below="@+id/obj2_pic"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="16dp"
+            app:srcCompat="@drawable/ic_dummy3" />
 
         <LinearLayout
             android:layout_width="332dp"
             android:layout_height="match_parent"
-            android:layout_marginStart="25dp"
-            android:layout_toEndOf="@+id/establecimiento_icon_sucursales"
+            android:layout_toEndOf="@+id/obj1_pic"
             android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="100dp"
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/label_obj3"
+                    android:id="@+id/label_obj1"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Objekt 1" />
+                    android:layout_height="40dp"
+                    android:text="Object 1" />
 
                 <Spinner
                     android:id="@+id/spinner1"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:entries="@array/status_array" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="100dp"
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/label_obj3"
+                    android:id="@+id/label_obj"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Objekt 2" />
+                    android:layout_height="40dp"
+                    android:text="Object 2" />
 
                 <Spinner
                     android:id="@+id/spinner2"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:entries="@array/status_array" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="100dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/label_obj3"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Objekt 3" />
+                    android:layout_height="40dp"
+                    android:text="Object 3" />
 
                 <Spinner
                     android:id="@+id/spinner3"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:entries="@array/status_array" />
             </LinearLayout>
 
         </LinearLayout>

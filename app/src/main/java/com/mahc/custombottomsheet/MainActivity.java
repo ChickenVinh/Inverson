@@ -25,9 +25,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -156,9 +158,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        createSpinner();
+        //createSpinner();
     }
-
+/*
     private void createSpinner() {
 
             Spinner spinner1 = (Spinner) findViewById(R.id.spinner1);
@@ -174,7 +176,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             spinner2.setAdapter(adapter);
             spinner3.setAdapter(adapter);
     }
-
+*/
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -185,7 +187,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
             @Override
             public void onCameraMoveStarted(int i) {
-                behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
+                //behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
             }
         });
 
@@ -197,7 +199,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<Antenna>() {
             @Override
             public boolean onClusterItemClick(Antenna item) {
-                behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT);
                 displayAntenna(item);
                 return true;
             }
@@ -224,9 +225,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
-
+        behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT);
         CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(item.getPosition().latitude - 0.05,item.getPosition().longitude))
+                .target(new LatLng(item.getPosition().latitude - 0.02,item.getPosition().longitude))
                 .zoom(DEFAULT_ZOOM).build();
         //Zoom in and animate the camera.
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -242,6 +243,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
 
+        ImageView obj1_pic = (ImageView)findViewById(R.id.obj1_pic);
+        ImageView obj2_pic = (ImageView)findViewById(R.id.obj2_pic);
+        ImageView obj3_pic = (ImageView)findViewById(R.id.obj3_pic);
+        obj1_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
+        obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy2));
+        obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy3));
 
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
@@ -303,6 +310,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         else {
             EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
         }
+    }
+
+    public void showList(View view) {
+
     }
 
     //START CAMERA
@@ -381,6 +392,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return content;
     }
+
+
 
     private class DownloadFilesTask extends AsyncTask<URL, Void, ArrayList<String>> {
         protected ArrayList<String> doInBackground(URL... urls) {
