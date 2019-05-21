@@ -12,10 +12,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -157,8 +159,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 return false;
             }
         });
-
-        //createSpinner();
     }
 /*
     private void createSpinner() {
@@ -282,7 +282,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 System.out.println(">>>>>>Error @ Parsing");
             }
         }
-        ArrayList<Marker> MarkerList = new ArrayList<Marker>(mClusterManager.getMarkerCollection().getMarkers());
+        //ArrayList<Marker> MarkerList = new ArrayList<Marker>(mClusterManager.getMarkerCollection().getMarkers());
+        ArrayList<String> IDstrings = new ArrayList<String>();
+        IDstrings.add("");
+        for (Antenna a: AntennaCollection) {
+            IDstrings.add(a.getTitle());
+        }
+        Spinner spinner_antenna = (Spinner)findViewById(R.id.spinner_antennas);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,IDstrings);
+        adapter.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item);
+
+        spinner_antenna.setAdapter(adapter);
+
+        //Antenna selected
+        spinner_antenna.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
+                TextView txt_search = findViewById(R.id.txt_search);
+                txt_search.setText(parent.getItemAtPosition(pos).toString());
+                try {
+                    displayAntenna(AntennaCollection.get(pos-1));
+                }catch(Exception ex){}
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent){
+                //Another interface callback
+            }
+
+        });
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -402,6 +432,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onPostExecute(ArrayList<String> result) {
             if(!result.isEmpty()){
                 parsePins(result);
+
             }
         }
     }

@@ -42,4 +42,9 @@ public class Antenna implements ClusterItem {
     public String getExtTitle(){
         return mExtTitle;
     }
+
+    @Override
+    public String toString() {
+        return mTitle;
+    }
 }

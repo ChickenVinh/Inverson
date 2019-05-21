@@ -73,19 +73,13 @@
                 android:textColor="#000"
                 android:textSize="15sp" />
 
-            <ImageButton
-                android:id="@+id/imageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignTop="@+id/txt_search"
+            <Spinner
+                android:id="@+id/spinner_antennas"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
                 android:layout_alignEnd="@+id/txt_search"
-                android:layout_alignBottom="@+id/txt_search"
-                android:layout_marginTop="0dp"
                 android:layout_marginEnd="4dp"
-                android:layout_marginBottom="4dp"
-                android:background="@color/transparent"
-                android:onClick="showList"
-                android:src="@android:drawable/ic_menu_sort_by_size" />
+                android:spinnerMode="dialog" />
         </RelativeLayout>
 
         <!--
