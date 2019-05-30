@@ -14,7 +14,7 @@
     <string name="URL_antennas">http://gastroconsultung-catering.com/infos.csv</string>
     <string name="error_antenna_not_found">Antenna not Found!</string>
     <string name="searchbar_hint">Enter ID, Address or City</string>
-
+    <string name="upload_script">http://gastroconsultung-catering.com/upload.php</string>
 
     <string-array name="status_array">
         <item>Status OK</item>
