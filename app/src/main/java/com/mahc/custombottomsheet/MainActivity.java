@@ -1,16 +1,19 @@
 package com.mahc.custombottomsheet;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -52,13 +55,26 @@ import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -76,6 +92,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehaviorGoogleMapsLike behavior;
+    ProgressDialog progressDialog ;
+    Antenna selectedAntenna = null;
+    //IMG SERVER STUFF
+    String ImageNameFieldOnServer = "image_name" ;
+    String ImagePathFieldOnServer = "image_path" ;
+    boolean check = true;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -225,6 +247,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
+        selectedAntenna = item;
         behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(item.getPosition().latitude - 0.02,item.getPosition().longitude))
@@ -360,14 +383,170 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
+            Uri uri = data.getData();
+            //show Thumbnail
             ImageView imageView = (ImageView) findViewById(R.id.cam_pic);
-            imageView.setImageBitmap(imageBitmap);
+            imageView.setImageBitmap((Bitmap)data.getExtras().get("data"));
+
+            try {
+                // Adding captured image in bitmap.
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
+                byte[] byteArrayVar = byteArrayOutputStreamObject.toByteArray();
+                uploadImgByteArray(byteArrayVar);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
-    private void getDeviceLocation(){
+    private void uploadImgByteArray(byte[] b_arr){
+        final String ConvertImage = Base64.encodeToString(b_arr, Base64.DEFAULT);
+
+
+
+
+        class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
+
+            @Override
+            protected void onPreExecute() {
+
+                super.onPreExecute();
+
+                // Showing progress dialog at image upload time.
+                progressDialog = ProgressDialog.show(MainActivity.this,"Image is Uploading","Please Wait",false,false);
+            }
+
+            @Override
+            protected void onPostExecute(String string1) {
+
+                super.onPostExecute(string1);
+
+                // Dismiss the progress dialog after done uploading.
+                progressDialog.dismiss();
+
+                // Printing uploading success message coming from server on android app.
+                Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
+
+
+            }
+
+            @Override
+            protected String doInBackground(Void... params) {
+
+                ImageProcessClass imageProcessClass = new ImageProcessClass();
+
+                HashMap<String,String> HashMapParams = new HashMap<String,String>();
+
+                HashMapParams.put(ImageNameFieldOnServer, selectedAntenna.getTitle() + "_" + new SimpleDateFormat("yyyyMMddHHmm'.txt'").format(new Date()));
+
+                HashMapParams.put(ImagePathFieldOnServer, ConvertImage);
+
+                String FinalData = imageProcessClass.ImageHttpRequest(getString(R.string.upload_script), HashMapParams);
+
+                return FinalData;
+            }
+        }
+
+
+        AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
+        AsyncTaskUploadClassOBJ.execute();
+    }
+
+    public class ImageProcessClass{
+
+        public String ImageHttpRequest(String requestURL,HashMap<String, String> PData) {
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            try {
+
+                URL url;
+                HttpURLConnection httpURLConnectionObject ;
+                OutputStream OutPutStream;
+                BufferedWriter bufferedWriterObject ;
+                BufferedReader bufferedReaderObject ;
+                int RC ;
+
+                url = new URL(requestURL);
+
+                httpURLConnectionObject = (HttpURLConnection) url.openConnection();
+
+                httpURLConnectionObject.setReadTimeout(19000);
+
+                httpURLConnectionObject.setConnectTimeout(19000);
+
+                httpURLConnectionObject.setRequestMethod("POST");
+
+                httpURLConnectionObject.setDoInput(true);
+
+                httpURLConnectionObject.setDoOutput(true);
+
+                OutPutStream = httpURLConnectionObject.getOutputStream();
+
+                bufferedWriterObject = new BufferedWriter(
+
+                        new OutputStreamWriter(OutPutStream, "UTF-8"));
+
+                bufferedWriterObject.write(bufferedWriterDataFN(PData));
+
+                bufferedWriterObject.flush();
+
+                bufferedWriterObject.close();
+
+                OutPutStream.close();
+
+                RC = httpURLConnectionObject.getResponseCode();
+
+                if (RC == HttpsURLConnection.HTTP_OK) {
+
+                    bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
+
+                    stringBuilder = new StringBuilder();
+
+                    String RC2;
+
+                    while ((RC2 = bufferedReaderObject.readLine()) != null){
+
+                        stringBuilder.append(RC2);
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return stringBuilder.toString();
+        }
+
+        private String bufferedWriterDataFN(HashMap<String, String> HashMapParams) throws UnsupportedEncodingException {
+
+            StringBuilder stringBuilderObject;
+
+            stringBuilderObject = new StringBuilder();
+
+            for (Map.Entry<String, String> KEY : HashMapParams.entrySet()) {
+
+                if (check)
+
+                    check = false;
+                else
+                    stringBuilderObject.append("&");
+
+                stringBuilderObject.append(URLEncoder.encode(KEY.getKey(), "UTF-8"));
+
+                stringBuilderObject.append("=");
+
+                stringBuilderObject.append(URLEncoder.encode(KEY.getValue(), "UTF-8"));
+            }
+
+            return stringBuilderObject.toString();
+        }
+
+    }
+    private void getAndMoveToDeviceLocation(){
         Log.d("", "getDeviceLocation: getting the devices current location");
 
         FusedLocationProviderClient mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
