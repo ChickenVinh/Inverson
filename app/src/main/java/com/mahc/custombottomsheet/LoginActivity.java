@@ -247,6 +247,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 //start Map Activity
                 Intent suc = new Intent(LoginActivity.this, MainActivity.class);
+                suc.putExtra("User", mEmailView.getText().toString());
                 startActivity(suc);
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
