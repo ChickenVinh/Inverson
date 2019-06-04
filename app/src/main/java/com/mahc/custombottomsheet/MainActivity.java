@@ -12,6 +12,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
@@ -32,6 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.fragment.app.Fragment;
@@ -57,6 +60,7 @@ import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -89,21 +93,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private ClusterManager<Antenna> mClusterManager;
     private ArrayList<Antenna> AntennaCollection = new ArrayList<>();
+    private String user;
+    private Antenna selectedAntenna = null;
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehaviorGoogleMapsLike behavior;
     ProgressDialog progressDialog ;
-    Antenna selectedAntenna = null;
+
     //IMG SERVER STUFF
     String ImageNameFieldOnServer = "image_name" ;
     String ImagePathFieldOnServer = "image_path" ;
     boolean check = true;
-
+    private String currentPhotoPath;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //Get the Username from Login activity
+        Intent suc = super.getIntent();
+        user = suc.getStringExtra("User");
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -115,11 +127,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         DownloadFilesTask downloadFilesTask = new DownloadFilesTask();
         downloadFilesTask.execute();
 
+        //Request Permissions
         requestCameraPermission();
         requestLocationPermission();
 
-        //If we want to listen for states callback
-
+        //BottomSheet Callbacks
         CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
         bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
         behavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
@@ -372,17 +384,57 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
         Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+/*
+        if (imageIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
 
+            if (photoFile != null) {
+                try {
+                    Uri photoURI = FileProvider.getUriForFile(this, getApplicationContext().getPackageName(), photoFile);
+                    imageIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                    startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+      */
         if(imageIntent.resolveActivity(getPackageManager())!=null){
             startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
         }
+
     }
 
     //CAMERA RESULT
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        //if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
+            ImageView imageView = (ImageView) findViewById(R.id.cam_pic);
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            imageView.setImageBitmap(imageBitmap);
+
+            try {
+                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
+                byte[] byteArrayVar = byteArrayOutputStreamObject.toByteArray();
+                uploadImgByteArray(byteArrayVar);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+/*
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
             ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
             Uri uri = data.getData();
             //show Thumbnail
@@ -401,13 +453,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         }
+        */
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 
     private void uploadImgByteArray(byte[] b_arr){
         final String ConvertImage = Base64.encodeToString(b_arr, Base64.DEFAULT);
-
-
-
 
         class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
 
@@ -430,8 +496,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // Printing uploading success message coming from server on android app.
                 Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
-
-
             }
 
             @Override
@@ -441,7 +505,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 HashMap<String,String> HashMapParams = new HashMap<String,String>();
 
-                HashMapParams.put(ImageNameFieldOnServer, selectedAntenna.getTitle() + "_" + new SimpleDateFormat("yyyyMMddHHmm'.txt'").format(new Date()));
+                HashMapParams.put(ImageNameFieldOnServer, selectedAntenna.getTitle()
+                                                            + "_" + "Modul1" //ADD MODULE NAME
+                                                            + "_" + user
+                                                            + "_" + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date()));
 
                 HashMapParams.put(ImagePathFieldOnServer, ConvertImage);
 
@@ -611,7 +678,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onPostExecute(ArrayList<String> result) {
             if(!result.isEmpty()){
                 parsePins(result);
-
+            }else{
+                Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
             }
         }
     }
