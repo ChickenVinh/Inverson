@@ -71,84 +71,6 @@
     </RelativeLayout>
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="12dp"
-        android:background="@drawable/border_bottom">
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
-
-            <ImageButton
-                android:id="@+id/button1"
-                android:layout_width="70dp"
-                android:layout_height="60dp"
-                android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_camera"
-                android:onClick="dispatchTakePictureIntent"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:text="Camera"
-                android:textColor="@android:color/black" />
-        </RelativeLayout>
-
-
-        <LinearLayout
-            android:id="@+id/establecimiento_layout_favoritos_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp">
-
-            <ImageButton
-                android:id="@+id/button2"
-                android:layout_width="70dp"
-                android:layout_height="60dp"
-                android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/btn_star" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Favorit"
-                android:textAlignment="center"
-                android:textColor="@android:color/black" />
-        </LinearLayout>
-
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
-
-            <ImageButton
-                android:id="@+id/establecimiento_share_button"
-                android:layout_width="70dp"
-                android:layout_height="60dp"
-                android:layout_centerHorizontal="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_directions" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:text="    Route"
-                android:textColor="@android:color/black" />
-        </RelativeLayout>
-    </LinearLayout>
-
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="300dp"
@@ -170,6 +92,7 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="16dp"
             android:background="@color/transparent"
+            android:onClick="dispatchTakePictureIntent"
             app:srcCompat="@drawable/ic_dummy1"
             tools:srcCompat="@drawable/ic_dummy1" />
 
@@ -183,6 +106,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="16dp"
+            android:onClick="dispatchTakePictureIntent"
             app:srcCompat="@drawable/ic_dummy2" />
 
         <ImageView
@@ -194,6 +118,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="16dp"
+            android:onClick="dispatchTakePictureIntent"
             app:srcCompat="@drawable/ic_dummy3" />
 
         <LinearLayout
