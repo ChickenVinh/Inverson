@@ -65,6 +65,7 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -125,7 +126,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     String ImagePathFieldOnServer = "image_path" ;
     boolean check = true;
     private String currentPhotoPath;
-    @RequiresApi(api = Build.VERSION_CODES.M)
+    //@RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -306,21 +307,44 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
 
-        /*
+        String get_url;
+        HTTPProcessClass httpobj = new HTTPProcessClass();
+        String img;
 
-        ImageButton obj1_pic = (ImageView)findViewById(R.id.obj1_pic);
-        ImageView obj2_pic = (ImageView)findViewById(R.id.obj2_pic);
-        ImageView obj3_pic = (ImageView)findViewById(R.id.obj3_pic);
-        obj1_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
-        obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
-        obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
-*/
+        //###1
+        get_url = "http://gastroconsultung-catering.com/getLatest.php?ID=" + item.getTitle() + "&module=" +getResources().getString(R.string.Object1);
+        img = httpobj.LastImgHttpRequest(get_url);
+        if (img != null) {
+            LoadPic LoadPicClass = new LoadPic();
+            LoadPicClass.execute("http://gastroconsultung-catering.com/" + img);
+        }
+        //###2
+        get_url = "http://gastroconsultung-catering.com/getLatest.php?ID=" + item.getTitle() + "&module=" +getResources().getString(R.string.Object2);
+        img = httpobj.LastImgHttpRequest(get_url);
+        if (img != null) {
+            LoadPic LoadPicClass = new LoadPic();
+            LoadPicClass.execute("http://gastroconsultung-catering.com/" + img);
+        }
+        //###3
+        get_url = "http://gastroconsultung-catering.com/getLatest.php?ID=" + item.getTitle() + "&module=" +getResources().getString(R.string.Object3);
+        img = httpobj.LastImgHttpRequest(get_url);
+        if (img != null) {
+            LoadPic LoadPicClass = new LoadPic();
+            LoadPicClass.execute("http://gastroconsultung-catering.com/" + img);
+        }
+
+        //obj1_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
+        //obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
+        //obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
+
+
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
 
     }
+
     //PARSE ANTENNAS FROM CSV
     public void parsePins(ArrayList<String> tmp) {
         String csvDelimiter = ";";
@@ -425,9 +449,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
       */
-        if(imageIntent.resolveActivity(getPackageManager())!=null){
-            startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
-        }
 
     }
     //CAMERA RESULT
@@ -474,6 +495,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         */
     }
+
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -511,7 +533,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // Dismiss the progress dialog after done uploading.
                 progressDialog.dismiss();
-
+                displayAntenna(selectedAntenna);
                 // Printing uploading success message coming from server on android app.
                 Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
             }
@@ -519,7 +541,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             protected String doInBackground(Void... params) {
 
-                ImageProcessClass imageProcessClass = new ImageProcessClass();
+                HTTPProcessClass httpProcessClass = new HTTPProcessClass();
 
                 HashMap<String,String> HashMapParams = new HashMap<String,String>();
 
@@ -529,7 +551,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 HashMapParams.put(ImagePathFieldOnServer, ConvertImage);
 
-                String FinalData = imageProcessClass.ImageHttpRequest(getString(R.string.upload_script), HashMapParams);
+                String FinalData = httpProcessClass.ImageHttpRequest(getString(R.string.upload_script), HashMapParams);
 
                 return FinalData;
             }
@@ -539,7 +561,41 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
         AsyncTaskUploadClassOBJ.execute();
     }
-    public class ImageProcessClass{
+    public class HTTPProcessClass{
+
+        public String LastImgHttpRequest(String reqURL){
+            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                URL url;
+                HttpURLConnection httpURLConnectionObject ;
+                OutputStream OutPutStream;
+                BufferedReader bufferedReaderObject ;
+                int RC ;
+                url = new URL(reqURL);
+                httpURLConnectionObject = (HttpURLConnection) url.openConnection();
+                httpURLConnectionObject.setReadTimeout(19000);
+                httpURLConnectionObject.setConnectTimeout(19000);
+                httpURLConnectionObject.setRequestMethod("GET");
+                httpURLConnectionObject.setDoInput(true);
+                httpURLConnectionObject.setDoOutput(true);
+                RC = httpURLConnectionObject.getResponseCode();
+                if (RC == HttpsURLConnection.HTTP_OK) {
+
+                    bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
+
+                    stringBuilder = new StringBuilder();
+
+                    String RC2;
+
+                    while ((RC2 = bufferedReaderObject.readLine()) != null){
+                        stringBuilder.append(RC2);
+                    }
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            return stringBuilder.toString();
+        }
 
         public String ImageHttpRequest(String requestURL,HashMap<String, String> PData) {
 
@@ -693,6 +749,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }else{
                 Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
             }
+        }
+    }
+    private class LoadPic extends AsyncTask<String, Void, Bitmap> {
+        protected Bitmap doInBackground(String... path) {
+            Bitmap bmp = null;
+            try {
+                InputStream is = (InputStream) new URL(path[0]).getContent();
+                bmp = BitmapFactory.decodeStream(is);
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+            return bmp;
+        }
+        protected void onPostExecute(Bitmap bmp) {
+            ImageButton obj_pic = (ImageButton)findViewById(objnr);
+            obj_pic.setImageBitmap(bmp);
         }
     }
     //KEYBOARD HIDE
