@@ -75,8 +75,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -101,6 +112,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     ProgressDialog progressDialog ;
 
     //IMG SERVER STUFF
+    String ServerURL = "http://gastroconsultung-catering.com/getData.php";
     String ImageNameFieldOnServer = "image_name" ;
     String ImagePathFieldOnServer = "image_path" ;
     boolean check = true;
@@ -384,6 +396,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
         Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        String a = "Android";
+        String b = "88";
+        String c = "Android";
+        insertToDB(a, b, c);
+
 /*
         if (imageIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
@@ -522,6 +539,52 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
         AsyncTaskUploadClassOBJ.execute();
     }
+
+    private void insertToDB(final String antenna_ID, final String module, final String user_ID){
+        System.out.println(":)");
+        class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
+
+            @Override
+            protected String doInBackground(String... params) {
+                String antenna_IDHolder = antenna_ID;
+                String moduleHolder = module;
+                String user_IDHolder = user_ID;
+
+                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+                nameValuePairs.add(new BasicNameValuePair("antenna_ID", antenna_IDHolder));
+                nameValuePairs.add(new BasicNameValuePair("module", moduleHolder));
+                nameValuePairs.add(new BasicNameValuePair("user_ID", user_IDHolder));
+                try {
+                    HttpClient httpClient = new DefaultHttpClient();
+
+                    HttpPost httpPost = new HttpPost(ServerURL);
+
+                    httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                    HttpResponse httpResponse = httpClient.execute(httpPost);
+
+                    HttpEntity httpEntity = httpResponse.getEntity();
+
+
+                } catch (ClientProtocolException e) {
+                } catch (IOException e) {
+                }
+                return "Data Inserted Successfully";
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+
+                super.onPostExecute(result);
+
+                Toast.makeText(MainActivity.this, "Data Submit Successfully", Toast.LENGTH_LONG).show();
+
+            }
+        }
+        SendPostReqAsyncTask sendPostReqAsyncTask = new SendPostReqAsyncTask();
+
+        sendPostReqAsyncTask.execute(antenna_ID, module, user_ID);
+    }
+
 
     public class ImageProcessClass{
 
