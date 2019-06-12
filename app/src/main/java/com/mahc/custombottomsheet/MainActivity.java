@@ -57,6 +57,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
+import com.medavox.library.mutime.MissingTimeDataException;
+import com.medavox.library.mutime.MuTime;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -72,6 +74,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.security.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -79,7 +83,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-/*
+import java.util.TimeZone;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -89,7 +94,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-*/
+
 import javax.net.ssl.HttpsURLConnection;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -125,6 +130,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         //Get the Username from Login activity
         Intent suc = super.getIntent();
@@ -209,7 +215,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -241,8 +246,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng vietnam = new LatLng(16, 106.5);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,5.5f));
     }
+    //PERMISSION STUFF
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void requestCameraPermission(){
+        if (checkSelfPermission(Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
+                    MY_CAMERA_REQUEST_CODE);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+    @AfterPermissionGranted(REQUEST_LOCATION_PERMISSION)
+    public void requestLocationPermission() {
+        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
+        if(EasyPermissions.hasPermissions(this, perms)) {
+            Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
+        }
+    }
+    //SEARCH FOR ANTENNA
     private boolean searchMarker(String searchtext){
         for (Antenna ant : AntennaCollection) {
             String tit = ant.getTitle().toLowerCase(Locale.ROOT);
@@ -255,7 +285,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return false;
     }
-
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
         selectedAntenna = item;
@@ -292,6 +321,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Address.setText(item.getAddress());
 
     }
+    //PARSE ANTENNAS FROM CSV
     public void parsePins(ArrayList<String> tmp) {
         String csvDelimiter = ";";
         //ArrayList<String> tmp = FileHelper.ReadFile(this, filepath);
@@ -350,38 +380,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
     }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void requestCameraPermission(){
-        if (checkSelfPermission(Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA},
-                    MY_CAMERA_REQUEST_CODE);
-        }
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // Forward results to EasyPermissions
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-    }
-
-    @AfterPermissionGranted(REQUEST_LOCATION_PERMISSION)
-    public void requestLocationPermission() {
-        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
-        if(EasyPermissions.hasPermissions(this, perms)) {
-            Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show();
-        }
-        else {
-            EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
-        }
-    }
-
-    public void showList(View view) {
-
-    }
-
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
         Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -432,7 +430,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
     }
-
     //CAMERA RESULT
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -477,7 +474,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         */
     }
-
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -493,7 +489,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         currentPhotoPath = image.getAbsolutePath();
         return image;
     }
-
+    //UPLOAD IMG TO SERVER
     private void uploadImgByteArray(byte[] b_arr){
         final String ConvertImage = Base64.encodeToString(b_arr, Base64.DEFAULT);
 
@@ -529,8 +525,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 HashMapParams.put(ImageNameFieldOnServer, selectedAntenna.getTitle()
                                                             + "_" + obj //ADD MODULE NAME
-                                                            + "_" + user
-                                                            + "_" + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date()));
+                                                            + "_" + user);
 
                 HashMapParams.put(ImagePathFieldOnServer, ConvertImage);
 
@@ -544,54 +539,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
         AsyncTaskUploadClassOBJ.execute();
     }
-
-/*
-    private void insertToDB(final String antenna_ID, final String module, final String user_ID){
-        System.out.println(":)");
-        class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
-
-            @Override
-            protected String doInBackground(String... params) {
-                String antenna_IDHolder = antenna_ID;
-                String moduleHolder = module;
-                String user_IDHolder = user_ID;
-
-                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-                nameValuePairs.add(new BasicNameValuePair("antenna_ID", antenna_IDHolder));
-                nameValuePairs.add(new BasicNameValuePair("module", moduleHolder));
-                nameValuePairs.add(new BasicNameValuePair("user_ID", user_IDHolder));
-                try {
-                    HttpClient httpClient = new DefaultHttpClient();
-
-                    HttpPost httpPost = new HttpPost(ServerURL);
-
-                    httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                    HttpResponse httpResponse = httpClient.execute(httpPost);
-
-                    HttpEntity httpEntity = httpResponse.getEntity();
-
-
-                } catch (ClientProtocolException e) {
-                } catch (IOException e) {
-                }
-                return "Data Inserted Successfully";
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-
-                super.onPostExecute(result);
-
-                Toast.makeText(MainActivity.this, "Data Submit Successfully", Toast.LENGTH_LONG).show();
-
-            }
-        }
-        SendPostReqAsyncTask sendPostReqAsyncTask = new SendPostReqAsyncTask();
-
-        sendPostReqAsyncTask.execute(antenna_ID, module, user_ID);
-    }
-*/
-
     public class ImageProcessClass{
 
         public String ImageHttpRequest(String requestURL,HashMap<String, String> PData) {
@@ -682,6 +629,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
     }
+    //MOVE TO OWN LOCATION
     private void getAndMoveToDeviceLocation(){
         Log.d("", "getDeviceLocation: getting the devices current location");
 
@@ -712,8 +660,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("", "getDeviceLocation: SecurityException: " +e.getMessage());
         }
     }
-
-
     //DOWNLOAD ANTENNA-DATA
     private ArrayList<String> downloadAntennasCSV(){
         URL mUrl = null;
@@ -737,9 +683,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return content;
     }
-
-
-
     private class DownloadFilesTask extends AsyncTask<URL, Void, ArrayList<String>> {
         protected ArrayList<String> doInBackground(URL... urls) {
             return downloadAntennasCSV();
@@ -752,12 +695,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
-
+    //KEYBOARD HIDE
     public void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
-
-
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {
 
@@ -775,4 +716,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
         }
     }
+
+
+
+
+
 }
