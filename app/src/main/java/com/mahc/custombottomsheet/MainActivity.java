@@ -79,7 +79,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
+/*
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -89,7 +89,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-
+*/
 import javax.net.ssl.HttpsURLConnection;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -545,6 +545,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         AsyncTaskUploadClassOBJ.execute();
     }
 
+/*
     private void insertToDB(final String antenna_ID, final String module, final String user_ID){
         System.out.println(":)");
         class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
@@ -589,7 +590,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         sendPostReqAsyncTask.execute(antenna_ID, module, user_ID);
     }
-
+*/
 
     public class ImageProcessClass{
 
