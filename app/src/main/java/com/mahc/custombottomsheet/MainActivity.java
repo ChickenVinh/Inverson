@@ -24,6 +24,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
@@ -95,6 +96,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<Antenna> AntennaCollection = new ArrayList<>();
     private String user;
     private Antenna selectedAntenna = null;
+    private String obj;
+    private int objnr;
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehaviorGoogleMapsLike behavior;
@@ -194,23 +197,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-/*
-    private void createSpinner() {
 
-            Spinner spinner1 = (Spinner) findViewById(R.id.spinner1);
-            Spinner spinner2 = (Spinner) findViewById(R.id.spinner2);
-            Spinner spinner3 = (Spinner) findViewById(R.id.spinner3);
-            // Create an ArrayAdapter using the string array and a default spinner layout
-            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                    R.array.status_array, android.R.layout.simple_spinner_item);
-            // Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            // Apply the adapter to the spinner
-            spinner1.setAdapter(adapter);
-            spinner2.setAdapter(adapter);
-            spinner3.setAdapter(adapter);
-    }
-*/
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -278,13 +265,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
 
-        ImageView obj1_pic = (ImageView)findViewById(R.id.obj1_pic);
+        /*
+
+        ImageButton obj1_pic = (ImageView)findViewById(R.id.obj1_pic);
         ImageView obj2_pic = (ImageView)findViewById(R.id.obj2_pic);
         ImageView obj3_pic = (ImageView)findViewById(R.id.obj3_pic);
         obj1_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
-        obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy2));
-        obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy3));
-
+        obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
+        obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
+*/
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
@@ -384,7 +373,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
         Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        switch (view.getId()){
+            case R.id.obj1_pic:
+                obj = getResources().getString(R.string.Object1);
+                objnr = R.string.Object1;
+                break;
+            case R.id.obj2_pic:
+                obj = getResources().getString(R.string.Object2);
+                objnr = R.string.Object2;
+                break;
+            case R.id.obj3_pic:
+                obj = getResources().getString(R.string.Object3);
+                objnr = R.string.Object3;
+                break;
+        }
+
+        //THUMBNAIL
+        if(imageIntent.resolveActivity(getPackageManager())!=null){
+            startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
+        }
 /*
+        //FULL SIZE PHOTO
         if (imageIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
             try {
@@ -406,9 +415,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
       */
-        if(imageIntent.resolveActivity(getPackageManager())!=null){
-            startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
-        }
 
     }
 
@@ -419,10 +425,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
-            ImageView imageView = (ImageView) findViewById(R.id.cam_pic);
+            ImageButton campic = (ImageButton) findViewById(objnr);
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+
+            //campic.setImageBitmap(imageBitmap);
 
             try {
                 imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
@@ -506,14 +513,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 HashMap<String,String> HashMapParams = new HashMap<String,String>();
 
                 HashMapParams.put(ImageNameFieldOnServer, selectedAntenna.getTitle()
-                                                            + "_" + "Modul1" //ADD MODULE NAME
+                                                            + "_" + obj //ADD MODULE NAME
                                                             + "_" + user
                                                             + "_" + new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date()));
 
                 HashMapParams.put(ImagePathFieldOnServer, ConvertImage);
 
                 String FinalData = imageProcessClass.ImageHttpRequest(getString(R.string.upload_script), HashMapParams);
-
                 return FinalData;
             }
         }
