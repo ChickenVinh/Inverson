@@ -8,16 +8,13 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -33,12 +30,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.volley.Request;
@@ -46,7 +40,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.google.android.gms.common.util.IOUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -56,7 +49,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -81,27 +73,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.net.HttpURLConnection;
-import java.security.Timestamp;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -326,21 +303,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(String response) {
                         String[] res = response.split("\n");
-                        for (String s:res) {
-                            String module = s.split("###")[0];
-                            String imgpath = getResources().getString(R.string.server_url)+s.split("###")[1];
+                        if(!response.equals("")) {
+                            for (String s : res) {
+                                String module = s.split("###")[0];
+                                String imgpath = getResources().getString(R.string.server_url) + s.split("###")[1];
 
-                            if(module.equals(obj1_pic.getTag().toString())){
-                                Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
-                            }
-                            if(module.equals(obj2_pic.getTag().toString())){
-                                Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
-                            }
-                            if(module.equals(obj3_pic.getTag().toString())){
-                                Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                                if (module.equals(obj1_pic.getTag().toString())) {
+                                    Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
+                                }
+                                if (module.equals(obj2_pic.getTag().toString())) {
+                                    Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
+                                }
+                                if (module.equals(obj3_pic.getTag().toString())) {
+                                    Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                                }
                             }
                         }
-
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -356,12 +334,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
         //obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
 
-
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
-
     }
 
     //PARSE ANTENNAS FROM CSV
