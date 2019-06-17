@@ -41,6 +41,12 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.common.util.IOUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -57,9 +63,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
-import com.medavox.library.mutime.MissingTimeDataException;
-import com.medavox.library.mutime.MuTime;
+import com.squareup.picasso.Picasso;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -75,6 +81,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.net.HttpURLConnection;
 import java.security.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -100,6 +107,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+
+import static com.android.volley.toolbox.Volley.newRequestQueue;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
     //CONSTANTS
@@ -296,7 +305,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Zoom in and animate the camera.
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-
+//BOTTOMSHEET STUFF
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.dummy_antenne);
         RoundedBitmapDrawable roundedPic = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
         final float roundPx = (float) bitmap.getWidth() * 0.06f;
@@ -306,32 +315,42 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Title = (TextView)findViewById(R.id.bottom_sheet_title);
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
+        final ImageButton obj1_pic = (ImageButton)findViewById(R.id.obj1_pic);
+        final ImageButton obj2_pic = (ImageButton)findViewById(R.id.obj2_pic);
+        final ImageButton obj3_pic = (ImageButton)findViewById(R.id.obj3_pic);
 
-        String get_url;
-        HTTPProcessClass httpobj = new HTTPProcessClass();
-        String img;
+        String get_url = getResources().getString(R.string.server_url) + "getLatest.php?antenna_ID=\"" + item.getTitle() + "\"";
+        RequestQueue queue = newRequestQueue(this);
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        String[] res = response.split("\n");
+                        for (String s:res) {
+                            String module = s.split("###")[0];
+                            String imgpath = getResources().getString(R.string.server_url)+s.split("###")[1];
 
-        //###1
-        get_url = "http://gastroconsultung-catering.com/getLatest.php?ID=" + item.getTitle() + "&module=" +getResources().getString(R.string.Object1);
-        img = httpobj.LastImgHttpRequest(get_url);
-        if (img != null) {
-            LoadPic LoadPicClass = new LoadPic();
-            LoadPicClass.execute("http://gastroconsultung-catering.com/" + img);
-        }
-        //###2
-        get_url = "http://gastroconsultung-catering.com/getLatest.php?ID=" + item.getTitle() + "&module=" +getResources().getString(R.string.Object2);
-        img = httpobj.LastImgHttpRequest(get_url);
-        if (img != null) {
-            LoadPic LoadPicClass = new LoadPic();
-            LoadPicClass.execute("http://gastroconsultung-catering.com/" + img);
-        }
-        //###3
-        get_url = "http://gastroconsultung-catering.com/getLatest.php?ID=" + item.getTitle() + "&module=" +getResources().getString(R.string.Object3);
-        img = httpobj.LastImgHttpRequest(get_url);
-        if (img != null) {
-            LoadPic LoadPicClass = new LoadPic();
-            LoadPicClass.execute("http://gastroconsultung-catering.com/" + img);
-        }
+                            if(module.equals(obj1_pic.getTag().toString())){
+                                Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
+                            }
+                            if(module.equals(obj2_pic.getTag().toString())){
+                                Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
+                            }
+                            if(module.equals(obj3_pic.getTag().toString())){
+                                Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                            }
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this,"NetworkCall Error: " + error.getMessage(),Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
 
         //obj1_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
         //obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
@@ -561,10 +580,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
         AsyncTaskUploadClassOBJ.execute();
     }
+
     public class HTTPProcessClass{
 
         public String LastImgHttpRequest(String reqURL){
-            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                URL url = new URL(reqURL);
+                ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                HttpURLConnection mUrlConnection = (HttpURLConnection) url.openConnection();
+                mUrlConnection.setDoInput(true);
+                int RC = mUrlConnection.getResponseCode();
+                if (RC == HttpsURLConnection.HTTP_OK) {
+                    InputStream is = new BufferedInputStream(mUrlConnection.getInputStream());
+                    int i = is.read();
+                    while (i != -1) {
+                        bo.write(i);
+                        i = is.read();
+                    }
+                }
+                return bo.toString();
+            }catch (Exception e){
+                e.printStackTrace();
+                return "";
+            }
+
+
+            /*StringBuilder stringBuilder = new StringBuilder();
             try {
                 URL url;
                 HttpURLConnection httpURLConnectionObject ;
@@ -595,6 +636,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
             return stringBuilder.toString();
+            */
         }
 
         public String ImageHttpRequest(String requestURL,HashMap<String, String> PData) {
@@ -751,20 +793,42 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
-    private class LoadPic extends AsyncTask<String, Void, Bitmap> {
-        protected Bitmap doInBackground(String... path) {
+    private class GrabPicAsync extends AsyncTask<String, Void, Bitmap> {
+        String module;
+        protected Bitmap doInBackground(String... itemmodule) {
+            //do network stuff
             Bitmap bmp = null;
+            module = itemmodule[1];
             try {
-                InputStream is = (InputStream) new URL(path[0]).getContent();
+                String get_url = getResources().getString(R.string.server_url) + "getLatest.php?ID=" + itemmodule[0] + "&module=" + itemmodule[1];
+                URL url = new URL(get_url);
+                ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                HttpURLConnection mUrlConnection = (HttpURLConnection) url.openConnection();
+                mUrlConnection.setDoInput(true);
+                int RC = mUrlConnection.getResponseCode();
+                if (RC == HttpsURLConnection.HTTP_OK) {
+                    InputStream is = new BufferedInputStream(mUrlConnection.getInputStream());
+                    int i = is.read();
+                    while (i != -1) {
+                        bo.write(i);
+                        i = is.read();
+                    }
+                }
+                InputStream is = (InputStream) new URL(getResources().getString(R.string.server_url) + bo.toString()).getContent();
                 bmp = BitmapFactory.decodeStream(is);
-            }catch(IOException e){
+
+            } catch (Exception e) {
                 e.printStackTrace();
+                return bmp;
             }
             return bmp;
         }
         protected void onPostExecute(Bitmap bmp) {
-            ImageButton obj_pic = (ImageButton)findViewById(objnr);
-            obj_pic.setImageBitmap(bmp);
+            if(bmp != null) {
+                ImageButton obj_pic = (ImageButton) findViewById(R.id.obj1_pic);
+                obj_pic.setImageBitmap(bmp);
+
+            }
         }
     }
     //KEYBOARD HIDE

@@ -94,7 +94,8 @@
             android:background="@color/transparent"
             android:onClick="dispatchTakePictureIntent"
             android:scaleType="fitCenter"
-            android:src="@drawable/dummy2" />
+            android:src="@drawable/dummy2"
+            android:tag="@string/Object1" />
 
 
         <ImageButton
@@ -109,7 +110,8 @@
             android:background="@color/transparent"
             android:onClick="dispatchTakePictureIntent"
             android:scaleType="fitCenter"
-            android:src="@drawable/dummy2" />
+            android:src="@drawable/dummy2"
+            android:tag="@string/Object2" />
 
         <ImageButton
             android:id="@+id/obj3_pic"
@@ -123,7 +125,8 @@
             android:background="@color/transparent"
             android:onClick="dispatchTakePictureIntent"
             android:scaleType="fitCenter"
-            android:src="@drawable/dummy2" />
+            android:src="@drawable/dummy2"
+            android:tag="@string/Object3" />
 
         <LinearLayout
             android:layout_width="332dp"
@@ -146,7 +149,8 @@
                     android:id="@+id/spinner1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:entries="@array/status_array" />
+                    android:entries="@array/status_array"
+                    android:tag="@string/Object1" />
             </LinearLayout>
 
             <LinearLayout
@@ -164,7 +168,8 @@
                     android:id="@+id/spinner2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:entries="@array/status_array" />
+                    android:entries="@array/status_array"
+                    android:tag="@string/Object2" />
             </LinearLayout>
 
             <LinearLayout
@@ -182,7 +187,8 @@
                     android:id="@+id/spinner3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:entries="@array/status_array" />
+                    android:entries="@array/status_array"
+                    android:tag="@string/Object3" />
             </LinearLayout>
 
         </LinearLayout>
