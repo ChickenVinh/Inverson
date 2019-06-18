@@ -292,6 +292,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Title = (TextView)findViewById(R.id.bottom_sheet_title);
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
+        Spinner spin1 = (Spinner)findViewById(R.id.spinner1);
+        Spinner spin2 = (Spinner)findViewById(R.id.spinner2);
+        Spinner spin3 = (Spinner)findViewById(R.id.spinner3);
+
         final ImageButton obj1_pic = (ImageButton)findViewById(R.id.obj1_pic);
         final ImageButton obj2_pic = (ImageButton)findViewById(R.id.obj2_pic);
         final ImageButton obj3_pic = (ImageButton)findViewById(R.id.obj3_pic);
@@ -330,10 +334,41 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
 
-        //obj1_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
-        //obj2_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
-        //obj3_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_dummy1));
 
+
+        spin1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent){
+                //Another interface callback
+            }
+
+        });
+        spin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent){
+                //Another interface callback
+            }
+
+        });
+        spin3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent){
+                //Another interface callback
+            }
+
+        });
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
@@ -828,8 +863,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
         }
     }
-
-
 
 
 
