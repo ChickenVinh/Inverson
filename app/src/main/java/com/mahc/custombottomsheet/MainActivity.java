@@ -112,7 +112,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     String ImagePathFieldOnServer = "image_path" ;
     boolean check = true;
     private String currentPhotoPath;
-    //@RequiresApi(api = Build.VERSION_CODES.M)
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -292,9 +293,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Title = (TextView)findViewById(R.id.bottom_sheet_title);
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
-        Spinner spin1 = (Spinner)findViewById(R.id.spinner1);
-        Spinner spin2 = (Spinner)findViewById(R.id.spinner2);
-        Spinner spin3 = (Spinner)findViewById(R.id.spinner3);
+        final Spinner spin1 = (Spinner)findViewById(R.id.spinner1);
+        final Spinner spin2 = (Spinner)findViewById(R.id.spinner2);
+        final Spinner spin3 = (Spinner)findViewById(R.id.spinner3);
 
         final ImageButton obj1_pic = (ImageButton)findViewById(R.id.obj1_pic);
         final ImageButton obj2_pic = (ImageButton)findViewById(R.id.obj2_pic);
@@ -334,33 +335,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
 
-
-
         spin1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent){
-                //Another interface callback
-            }
-
-        });
-        spin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent){
-                //Another interface callback
-            }
-
-        });
-        spin3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
+                httpGET(selectedAntenna.getTitle(), spin1.getTag().toString(), user, Integer.toString(pos));
             }
 
             @Override
@@ -374,7 +352,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
     }
+    private void onItemSelected(AdapterView<?> parent, View view, int position, long id){
 
+    }
+    private void httpGET(String antenna_ID, String modul, String user, String status){
+        String get_url = getResources().getString(R.string.server_url) + "getLatest.php?status=\"" + status
+                                                                        + "\"&antenna_ID=\"" + antenna_ID
+                                                                        + "\"&module=\"" + modul
+                                                                        + "\"&user=\"" + user
+                                                                        + "\"";
+        RequestQueue queue = newRequestQueue(this);
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this,"NetworkCall Error: " + error.getMessage(),Toast.LENGTH_LONG).show();
+            }
+        });
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+    }
     //PARSE ANTENNAS FROM CSV
     public void parsePins(ArrayList<String> tmp) {
         String csvDelimiter = ";";
@@ -801,44 +803,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 parsePins(result);
             }else{
                 Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-    private class GrabPicAsync extends AsyncTask<String, Void, Bitmap> {
-        String module;
-        protected Bitmap doInBackground(String... itemmodule) {
-            //do network stuff
-            Bitmap bmp = null;
-            module = itemmodule[1];
-            try {
-                String get_url = getResources().getString(R.string.server_url) + "getLatest.php?ID=" + itemmodule[0] + "&module=" + itemmodule[1];
-                URL url = new URL(get_url);
-                ByteArrayOutputStream bo = new ByteArrayOutputStream();
-                HttpURLConnection mUrlConnection = (HttpURLConnection) url.openConnection();
-                mUrlConnection.setDoInput(true);
-                int RC = mUrlConnection.getResponseCode();
-                if (RC == HttpsURLConnection.HTTP_OK) {
-                    InputStream is = new BufferedInputStream(mUrlConnection.getInputStream());
-                    int i = is.read();
-                    while (i != -1) {
-                        bo.write(i);
-                        i = is.read();
-                    }
-                }
-                InputStream is = (InputStream) new URL(getResources().getString(R.string.server_url) + bo.toString()).getContent();
-                bmp = BitmapFactory.decodeStream(is);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return bmp;
-            }
-            return bmp;
-        }
-        protected void onPostExecute(Bitmap bmp) {
-            if(bmp != null) {
-                ImageButton obj_pic = (ImageButton) findViewById(R.id.obj1_pic);
-                obj_pic.setImageBitmap(bmp);
-
             }
         }
     }
