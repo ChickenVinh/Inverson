@@ -312,15 +312,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             for (String s : res) {
                                 String module = s.split("###")[0];
                                 String imgpath = getResources().getString(R.string.server_url) + s.split("###")[1];
-
                                 if (module.equals(obj1_pic.getTag().toString())) {
-                                    Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
+                                    if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                        Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
+                                    }
+                                    spin1.setSelection(Integer.parseInt(s.split("###")[2]));
                                 }
                                 if (module.equals(obj2_pic.getTag().toString())) {
-                                    Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
+                                    if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                        Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
+                                    }
+                                    spin2.setSelection(Integer.parseInt(s.split("###")[2]));
                                 }
                                 if (module.equals(obj3_pic.getTag().toString())) {
-                                    Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                                    if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                        Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                                    }
+                                    spin3.setSelection(Integer.parseInt(s.split("###")[2]));
                                 }
                             }
                         }
@@ -347,16 +355,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         });
+
+        spin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+                httpGET(selectedAntenna.getTitle(), spin2.getTag().toString(), user, Integer.toString(pos));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
     }
-    private void onItemSelected(AdapterView<?> parent, View view, int position, long id){
-
-    }
     private void httpGET(String antenna_ID, String modul, String user, String status){
-        String get_url = getResources().getString(R.string.server_url) + "getLatest.php?status=\"" + status
+        String get_url = getResources().getString(R.string.server_url) + "upload.php?status=\"" + status
                                                                         + "\"&antenna_ID=\"" + antenna_ID
                                                                         + "\"&module=\"" + modul
                                                                         + "\"&user=\"" + user
