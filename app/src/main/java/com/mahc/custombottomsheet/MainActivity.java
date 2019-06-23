@@ -282,7 +282,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 .zoom(DEFAULT_ZOOM).build();
         //Zoom in and animate the camera.
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
 //BOTTOMSHEET STUFF
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.dummy_antenne);
         RoundedBitmapDrawable roundedPic = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
@@ -294,12 +293,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
         TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
         final Spinner spin1 = (Spinner)findViewById(R.id.spinner1);
+        spin1.setEnabled(false);
+        spin1.setSelection(0);
         final Spinner spin2 = (Spinner)findViewById(R.id.spinner2);
+        spin2.setEnabled(false);
+        spin2.setSelection(0);
         final Spinner spin3 = (Spinner)findViewById(R.id.spinner3);
+        spin3.setEnabled(false);
+        spin3.setSelection(0);
 
         final ImageButton obj1_pic = (ImageButton)findViewById(R.id.obj1_pic);
+        obj1_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
         final ImageButton obj2_pic = (ImageButton)findViewById(R.id.obj2_pic);
+        obj2_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
         final ImageButton obj3_pic = (ImageButton)findViewById(R.id.obj3_pic);
+        obj3_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
+
 
         String get_url = getResources().getString(R.string.server_url) + "getLatest.php?antenna_ID=\"" + item.getTitle() + "\"";
         RequestQueue queue = newRequestQueue(this);
@@ -312,23 +321,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             for (String s : res) {
                                 String module = s.split("###")[0];
                                 String imgpath = getResources().getString(R.string.server_url) + s.split("###")[1];
-                                if (module.equals(obj1_pic.getTag().toString())) {
-                                    if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                    if (module.equals(obj1_pic.getTag().toString()) & !imgpath.equals(getResources().getString(R.string.server_url))) {
                                         Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
+                                        spin1.setSelection(Integer.parseInt(s.split("###")[2]));
+                                        spin1.setEnabled(true);
                                     }
-                                    spin1.setSelection(Integer.parseInt(s.split("###")[2]));
-                                }
-                                if (module.equals(obj2_pic.getTag().toString())) {
-                                    if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                    if (module.equals(obj2_pic.getTag().toString()) && !imgpath.equals(getResources().getString(R.string.server_url))) {
                                         Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
+                                        spin2.setSelection(Integer.parseInt(s.split("###")[2]));
+                                        spin2.setEnabled(true);
                                     }
-                                    spin2.setSelection(Integer.parseInt(s.split("###")[2]));
-                                }
-                                if (module.equals(obj3_pic.getTag().toString())) {
-                                    if(!imgpath.equals(getResources().getString(R.string.server_url))) {
+                                    if (module.equals(obj3_pic.getTag().toString()) && !imgpath.equals(getResources().getString(R.string.server_url))) {
                                         Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                                        spin3.setSelection(Integer.parseInt(s.split("###")[2]));
+                                        spin3.setEnabled(true);
                                     }
-                                    spin3.setSelection(Integer.parseInt(s.split("###")[2]));
                                 }
                             }
                         }
@@ -346,7 +354,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         spin1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
-                httpGET(selectedAntenna.getTitle(), spin1.getTag().toString(), user, Integer.toString(pos));
+                httpGETupdate(selectedAntenna.getTitle(), spin1.getTag().toString(), user, Integer.toString(pos));
             }
 
             @Override
@@ -359,9 +367,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         spin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
-                httpGET(selectedAntenna.getTitle(), spin2.getTag().toString(), user, Integer.toString(pos));
+                httpGETupdate(selectedAntenna.getTitle(), spin2.getTag().toString(), user, Integer.toString(pos));
             }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+        spin3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+                httpGETupdate(selectedAntenna.getTitle(), spin3.getTag().toString(), user, Integer.toString(pos));
+            }
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
 
@@ -372,7 +390,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
     }
-    private void httpGET(String antenna_ID, String modul, String user, String status){
+    private void httpGETupdate(String antenna_ID, String modul, String user, String status){
         String get_url = getResources().getString(R.string.server_url) + "upload.php?status=\"" + status
                                                                         + "\"&antenna_ID=\"" + antenna_ID
                                                                         + "\"&module=\"" + modul
@@ -383,7 +401,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
                     }
                 }, new Response.ErrorListener() {
             @Override
