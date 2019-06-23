@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -52,9 +53,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
-import com.mahc.custombottomsheetbehavior.BottomSheetBehaviorGoogleMapsLike;
 import com.squareup.picasso.Picasso;
 
 import java.io.BufferedInputStream;
@@ -103,7 +104,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int objnr;
     TextView bottomSheetTextView;
     View bottomSheet;
-    BottomSheetBehaviorGoogleMapsLike behavior;
+    BottomSheetBehavior behavior;
     ProgressDialog progressDialog ;
 
     //IMG SERVER STUFF
@@ -119,16 +120,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         //Get the Username from Login activity
         Intent suc = super.getIntent();
         user = suc.getStringExtra("User");
 
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
 
@@ -140,6 +138,42 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         requestCameraPermission();
         requestLocationPermission();
 
+        CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
+        bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
+        behavior = BottomSheetBehavior.from(bottomSheet);
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        final RelativeLayout searchbar = coordinatorLayout.findViewById(R.id.Searchbar);
+        behavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                switch (newState) {
+                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
+                        searchbar.setVisibility(View.VISIBLE);
+                        break;
+                    case BottomSheetBehavior.STATE_HIDDEN:
+                        break;
+                    case BottomSheetBehavior.STATE_EXPANDED: {
+                        searchbar.setVisibility(View.GONE);
+                    }
+                    break;
+                    case BottomSheetBehavior.STATE_COLLAPSED: {
+                        searchbar.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                    case BottomSheetBehavior.STATE_DRAGGING:
+                        break;
+                    case BottomSheetBehavior.STATE_SETTLING:
+                        searchbar.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+            }
+        });
+        /*
         //BottomSheet Callbacks
         CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
         bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
@@ -178,13 +212,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
             }
         });
-
+*/
         bottomSheetTextView = (TextView) bottomSheet.findViewById(R.id.bottom_sheet_title);
         //ItemPagerAdapter adapter = new ItemPagerAdapter(this,mDrawables);
         //ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
         //viewPager.setAdapter(adapter);
 
-        behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         //behavior.setCollapsible(false);
 
         final TextView searchTextView = (TextView)findViewById(R.id.txt_search);
@@ -276,7 +310,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
         selectedAntenna = item;
-        behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT);
+        behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(item.getPosition().latitude - 0.02,item.getPosition().longitude))
                 .zoom(DEFAULT_ZOOM).build();
@@ -470,6 +504,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         });
 
+    }
+    public void getDirectionsTo(View view) {
+        Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
+        startActivity(intent);
     }
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {

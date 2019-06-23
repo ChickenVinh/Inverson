@@ -19,13 +19,24 @@
         android:paddingEnd="16dp"
         android:paddingBottom="8dp">
 
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="48dp"
+            android:layout_height="44dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="10dp"
+            android:layout_toStartOf="@+id/bottom_sheet_pic"
+            android:background="@color/transparent"
+            android:onClick="getDirectionsTo"
+            android:scaleType="fitCenter"
+            android:src="@android:drawable/ic_menu_directions" />
+
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="92dp"
+            android:layout_width="260dp"
+            android:layout_height="91dp"
             android:layout_alignParentStart="true"
             android:layout_marginStart="0dp"
-            android:layout_marginEnd="11dp"
-            android:layout_toStartOf="@+id/bottom_sheet_pic"
             android:orientation="vertical">
 
             <TextView
@@ -205,7 +216,6 @@
         android:layout_height="350dp"
 
         android:layout_margin="16dp"
-        android:text="@string/dummy_text"
         android:textColor="@android:color/black"
         android:textSize="12sp" />
 
