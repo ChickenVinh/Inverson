@@ -1,1 +1,1 @@
-include ':googlemaps-like', ':app'
+include ':app'

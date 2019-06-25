@@ -74,6 +74,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -133,12 +134,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Download Antennas
         DownloadFilesTask downloadFilesTask = new DownloadFilesTask();
         downloadFilesTask.execute();
-
+        //downloadCSVVolley();
         //Request Permissions
         requestCameraPermission();
         requestLocationPermission();
 
-        CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
+        CoordinatorLayout coordinatorLayout = findViewById(R.id.coordinatorlayout);
         bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
         behavior = BottomSheetBehavior.from(bottomSheet);
         behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -173,47 +174,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
-        /*
-        //BottomSheet Callbacks
-        CoordinatorLayout coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorlayout);
-        bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
-        behavior = BottomSheetBehaviorGoogleMapsLike.from(bottomSheet);
-        final RelativeLayout searchbar = coordinatorLayout.findViewById(R.id.Searchbar);
-        behavior.addBottomSheetCallback(new BottomSheetBehaviorGoogleMapsLike.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED:
-                        Log.d("bottomsheet-", "STATE_COLLAPSED");
-                        searchbar.setVisibility(View.VISIBLE);
-                        break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_DRAGGING:
-                        Log.d("bottomsheet-", "STATE_DRAGGING");
-                        break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_EXPANDED:
-                        Log.d("bottomsheet-", "STATE_EXPANDED");
-                        searchbar.setVisibility(View.GONE);
-                        break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_ANCHOR_POINT:
-                        Log.d("bottomsheet-", "STATE_ANCHOR_POINT");
-                        searchbar.setVisibility(View.VISIBLE);
-                        break;
-                    case BottomSheetBehaviorGoogleMapsLike.STATE_HIDDEN:
-                        Log.d("bottomsheet-", "STATE_HIDDEN");
-                        searchbar.setVisibility(View.VISIBLE);
-                        break;
-                    default:
-                        Log.d("bottomsheet-", "STATE_SETTLING");
-                        break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-            }
-        });
-*/
-        bottomSheetTextView = (TextView) bottomSheet.findViewById(R.id.bottom_sheet_title);
+        bottomSheetTextView = bottomSheet.findViewById(R.id.bottom_sheet_title);
         //ItemPagerAdapter adapter = new ItemPagerAdapter(this,mDrawables);
         //ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
         //viewPager.setAdapter(adapter);
@@ -221,7 +182,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         //behavior.setCollapsible(false);
 
-        final TextView searchTextView = (TextView)findViewById(R.id.txt_search);
+        final TextView searchTextView = findViewById(R.id.txt_search);
 
         searchTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -322,25 +283,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         final float roundPx = (float) bitmap.getWidth() * 0.06f;
         roundedPic.setCornerRadius(roundPx);
 
-        ImageView Pic = (ImageView)findViewById(R.id.bottom_sheet_pic);
-        TextView Title = (TextView)findViewById(R.id.bottom_sheet_title);
-        TextView Address = (TextView)findViewById(R.id.bottom_sheet_address);
-        TextView extTitle = (TextView)findViewById(R.id.bottom_sheet_ext_title);
-        final Spinner spin1 = (Spinner)findViewById(R.id.spinner1);
+        ImageView Pic = findViewById(R.id.bottom_sheet_pic);
+        TextView Title = findViewById(R.id.bottom_sheet_title);
+        TextView Address = findViewById(R.id.bottom_sheet_address);
+        TextView extTitle = findViewById(R.id.bottom_sheet_ext_title);
+        final Spinner spin1 = findViewById(R.id.spinner1);
         spin1.setEnabled(false);
         spin1.setSelection(0);
-        final Spinner spin2 = (Spinner)findViewById(R.id.spinner2);
+        final Spinner spin2 = findViewById(R.id.spinner2);
         spin2.setEnabled(false);
         spin2.setSelection(0);
-        final Spinner spin3 = (Spinner)findViewById(R.id.spinner3);
+        final Spinner spin3 = findViewById(R.id.spinner3);
         spin3.setEnabled(false);
         spin3.setSelection(0);
 
-        final ImageButton obj1_pic = (ImageButton)findViewById(R.id.obj1_pic);
+        final ImageButton obj1_pic = findViewById(R.id.obj1_pic);
         obj1_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
-        final ImageButton obj2_pic = (ImageButton)findViewById(R.id.obj2_pic);
+        final ImageButton obj2_pic = findViewById(R.id.obj2_pic);
         obj2_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
-        final ImageButton obj3_pic = (ImageButton)findViewById(R.id.obj3_pic);
+        final ImageButton obj3_pic = findViewById(R.id.obj3_pic);
         obj3_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
 
 
@@ -424,6 +385,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
     }
+    private void downloadCSVVolley(){
+        progressDialog = ProgressDialog.show(MainActivity.this,"Download Antennas","Please Wait",false,false);
+        String get_url = getResources().getString(R.string.URL_antennas);
+        RequestQueue queue = newRequestQueue(this);
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progressDialog.dismiss();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this,"NetworkCall Error: " + error.getMessage(),Toast.LENGTH_LONG).show();
+                progressDialog.dismiss();
+            }
+        });
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
+    }
     private void httpGETupdate(String antenna_ID, String modul, String user, String status){
         String get_url = getResources().getString(R.string.server_url) + "upload.php?status=\"" + status
                                                                         + "\"&antenna_ID=\"" + antenna_ID
@@ -479,7 +460,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         for (Antenna a: AntennaCollection) {
             IDstrings.add(a.getTitle());
         }
-        Spinner spinner_antenna = (Spinner)findViewById(R.id.spinner_antennas);
+        Spinner spinner_antenna = findViewById(R.id.spinner_antennas);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,IDstrings);
         adapter.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item);
 
@@ -564,7 +545,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
-            ImageButton campic = (ImageButton) findViewById(objnr);
+            ImageButton campic = findViewById(objnr);
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
 
@@ -644,6 +625,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
             }
 
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             protected String doInBackground(Void... params) {
 
@@ -726,7 +708,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             */
         }
 
-        public String ImageHttpRequest(String requestURL,HashMap<String, String> PData) {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        public String ImageHttpRequest(String requestURL, HashMap<String, String> PData) {
 
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -757,7 +740,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 bufferedWriterObject = new BufferedWriter(
 
-                        new OutputStreamWriter(OutPutStream, "UTF-8"));
+                        new OutputStreamWriter(OutPutStream, StandardCharsets.UTF_8));
 
                 bufferedWriterObject.write(bufferedWriterDataFN(PData));
 
@@ -870,9 +853,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     private class DownloadFilesTask extends AsyncTask<URL, Void, ArrayList<String>> {
         protected ArrayList<String> doInBackground(URL... urls) {
+            System.out.println("Downloaded Line");
             return downloadAntennasCSV();
         }
         protected void onPostExecute(ArrayList<String> result) {
+
             if(!result.isEmpty()){
                 parsePins(result);
             }else{
