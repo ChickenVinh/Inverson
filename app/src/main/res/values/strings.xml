@@ -22,6 +22,10 @@
     <string name="Object4">Object-4</string>
     <string name="Object5">Object-5</string>
 
+    <string name="title_activity_object">ObjectActivity</string>
+    <string name="tab_text_1">Object 1</string>
+    <string name="tab_text_2">Object 2</string>
+    <string name="tab_text_3">Object 3</string>
     <string-array name="status_array">
         <item>Select status…</item>
         <item>Status OK</item>

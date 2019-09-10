@@ -114,6 +114,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     String ImagePathFieldOnServer = "image_path" ;
     boolean check = true;
     private String currentPhotoPath;
+    private int page;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -491,6 +492,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
         startActivity(intent);
     }
+
+    public void startObjectActivity(View view){
+        Intent intent = new Intent(MainActivity.this, ObjectActivity.class);
+        //Pass Object number to get to right tab
+        switch (view.getId()) {
+            case R.id.obj1_pic:
+                page = 0;
+                break;
+            case R.id.obj2_pic:
+                page = 1;
+                break;
+            case R.id.obj3_pic:
+                page = 2;
+                break;
+        }
+        intent.putExtra("One", page);
+        startActivity(intent);
+    }
+
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
         Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
