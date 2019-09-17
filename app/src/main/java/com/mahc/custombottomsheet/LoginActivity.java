@@ -3,12 +3,13 @@ package com.mahc.custombottomsheet;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -17,13 +18,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -37,30 +31,47 @@ public class LoginActivity extends AppCompatActivity {
      * TODO: remove after connecting to a real authentication system.
      */
     private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "abc:123", "admin:admin"
+            "abcdef:123456", "admin:admin"
     };
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
-
+    SharedPreferences sharedpreferences;
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-
+    private boolean isLoggedIn = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /*
         try {
             Thread.sleep(1000);
         }catch (Exception x){}
-
+        */
         setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // Set up the login form.
+        sharedpreferences = getSharedPreferences("login", Context.MODE_PRIVATE);
         mEmailView = findViewById(R.id.email);
+        mPasswordView = findViewById(R.id.password);
+        mLoginFormView = findViewById(R.id.login_form);
+        mProgressView = findViewById(R.id.login_progress);
+
+
+        //if already logged in
+        if (sharedpreferences.contains("name") && sharedpreferences.contains("pw")) {
+            isLoggedIn = true;
+            String email = sharedpreferences.getString("name", "");
+            String password = sharedpreferences.getString("pw", "");
+            mEmailView.setText(email);
+            mPasswordView.setText(password);
+            attemptLogin();
+        }
+
+        // Set up the login form.
         mEmailView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -69,7 +80,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -81,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        Button mLoginButton = (Button) findViewById(R.id.email_sign_in_button);
+        Button mLoginButton = findViewById(R.id.email_sign_in_button);
         mLoginButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -89,14 +99,11 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-
 
 
         //DEV#####
-        mEmailView.setText("admin");
-        mPasswordView.setText("admin");
+        //mEmailView.setText("admin");
+        //mPasswordView.setText("admin");
         //attemptLogin();
     }
 
@@ -144,6 +151,13 @@ public class LoginActivity extends AppCompatActivity {
             // form field with an error.
             focusView.requestFocus();
         } else {
+            if(!isLoggedIn) {
+                //Save Credentials
+                SharedPreferences.Editor editor = sharedpreferences.edit();
+                editor.putString("name", mEmailView.getText().toString());
+                editor.putString("pw", mPasswordView.getText().toString());
+                editor.apply();
+            }
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);

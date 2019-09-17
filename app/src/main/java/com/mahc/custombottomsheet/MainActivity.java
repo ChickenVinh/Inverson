@@ -70,13 +70,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -133,9 +132,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         //Download Antennas
-        DownloadFilesTask downloadFilesTask = new DownloadFilesTask();
-        downloadFilesTask.execute();
-        //downloadCSVVolley();
+        downloadCSVVolley();
+
         //Request Permissions
         requestCameraPermission();
         requestLocationPermission();
@@ -383,14 +381,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
     }
+    //DOWNLOAD N PARSE ANTENNA DATA
     private void downloadCSVVolley(){
         progressDialog = ProgressDialog.show(MainActivity.this,"Download Antennas","Please Wait",false,false);
         String get_url = getResources().getString(R.string.URL_antennas);
         RequestQueue queue = newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
+                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
+                        String convtmp = "";
+                        convtmp = new String(response.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+                        ArrayList<String>  lstAntennas = new ArrayList<String>(Arrays.asList(convtmp.split("\r\n")));
+                        if(!lstAntennas.isEmpty()){
+                            parsePins(lstAntennas);
+                        }else{
+                            Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
+                        }
                         progressDialog.dismiss();
                     }
                 }, new Response.ErrorListener() {
@@ -403,6 +411,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
+
     private void httpGETupdate(String antenna_ID, String modul, String user, String status){
         String get_url = getResources().getString(R.string.server_url) + "upload.php?status=\"" + status
                                                                         + "\"&antenna_ID=\"" + antenna_ID
@@ -484,6 +493,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
     }
+    //NAVIGATION
     public void getDirectionsTo(View view) {
         Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
                 Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
@@ -668,7 +678,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public class HTTPProcessClass{
-
         public String LastImgHttpRequest(String reqURL){
             try {
                 URL url = new URL(reqURL);
@@ -843,43 +852,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }catch (SecurityException e){
             Log.e("", "getDeviceLocation: SecurityException: " +e.getMessage());
-        }
-    }
-    //DOWNLOAD ANTENNA-DATA
-    private ArrayList<String> downloadAntennasCSV(){
-        URL mUrl = null;
-        ArrayList<String> content = new ArrayList<>();
-        try {
-            mUrl = new URL(getString(R.string.URL_antennas));
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        try {
-            assert mUrl != null;
-            URLConnection connection = mUrl.openConnection();
-            BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String line = "";
-            while((line = br.readLine()) != null){
-                content.add(line);
-            }
-            br.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return content;
-    }
-    private class DownloadFilesTask extends AsyncTask<URL, Void, ArrayList<String>> {
-        protected ArrayList<String> doInBackground(URL... urls) {
-            System.out.println("Downloaded Line");
-            return downloadAntennasCSV();
-        }
-        protected void onPostExecute(ArrayList<String> result) {
-
-            if(!result.isEmpty()){
-                parsePins(result);
-            }else{
-                Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
-            }
         }
     }
     //KEYBOARD HIDE
