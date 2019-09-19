@@ -97,7 +97,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private ClusterManager<Antenna> mClusterManager;
-    private ArrayList<Antenna> AntennaCollection = new ArrayList<>();
+    private ArrayList<Antenna> mAntennaCollection = new ArrayList<>();
     private String user;
     private Antenna selectedAntenna = null;
     private String obj;
@@ -132,7 +132,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         //Download Antennas
-        downloadCSVVolley();
+        downloadCSV();
 
         //Request Permissions
         requestCameraPermission();
@@ -253,7 +253,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     //SEARCH FOR ANTENNA
     private boolean searchMarker(String searchtext){
-        for (Antenna ant : AntennaCollection) {
+        for (Antenna ant : mAntennaCollection) {
             String tit = ant.getTitle().toLowerCase(Locale.ROOT);
             String ext = ant.getExtTitle().toLowerCase(Locale.ROOT);
             if(searchtext.length() > 4 && (tit.contains(searchtext.toLowerCase(Locale.ROOT))
@@ -382,7 +382,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Address.setText(item.getAddress());
     }
     //DOWNLOAD N PARSE ANTENNA DATA
-    private void downloadCSVVolley(){
+    private void downloadCSV(){
         progressDialog = ProgressDialog.show(MainActivity.this,"Download Antennas","Please Wait",false,false);
         String get_url = getResources().getString(R.string.URL_antennas);
         RequestQueue queue = newRequestQueue(this);
@@ -395,7 +395,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         convtmp = new String(response.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
                         ArrayList<String>  lstAntennas = new ArrayList<String>(Arrays.asList(convtmp.split("\r\n")));
                         if(!lstAntennas.isEmpty()){
-                            parsePins(lstAntennas);
+                            //parsePins(lstAntennas);
+                            ParseTask parse = new ParseTask();
+                            parse.execute(lstAntennas);
                         }else{
                             Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
                         }
@@ -411,7 +413,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
-
+    //
     private void httpGETupdate(String antenna_ID, String modul, String user, String status){
         String get_url = getResources().getString(R.string.server_url) + "upload.php?status=\"" + status
                                                                         + "\"&antenna_ID=\"" + antenna_ID
@@ -434,37 +436,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
-    //PARSE ANTENNAS FROM CSV
-    public void parsePins(ArrayList<String> tmp) {
-        String csvDelimiter = ";";
-        //ArrayList<String> tmp = FileHelper.ReadFile(this, filepath);
+    //FILL ANTENNASPINNER
+    public void fillAntennaSpinner() {
 
-        tmp.remove(0);
-        for (String line : tmp) {
-            String[] lineArr = line.split(csvDelimiter);
-            try {
-                String ID = lineArr[0];
-                String extID = lineArr[1];
-                String Address = lineArr[3] + ", " + lineArr[4] + ", " + lineArr[5];
-                String klat = lineArr[7].replace(',', '.');
-                String klong = lineArr[6].replace(',', '.');
-
-                if (!klat.equalsIgnoreCase("#NV") && !klong.equalsIgnoreCase("#NV")) {
-                    //Create Antenna and add to Collection
-                    Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address, extID);
-
-                    AntennaCollection.add(tmp_ant);
-                    mClusterManager.addItem(tmp_ant);
-                    //change clustered Icons: https://stackoverflow.com/questions/36522305/android-cluster-manager-icon-depending-on-type
-                }
-            }catch(Exception e){
-                System.out.println(">>>>>>Error @ Parsing");
-            }
-        }
         //ArrayList<Marker> MarkerList = new ArrayList<Marker>(mClusterManager.getMarkerCollection().getMarkers());
         ArrayList<String> IDstrings = new ArrayList<String>();
         IDstrings.add("");
-        for (Antenna a: AntennaCollection) {
+        for (Antenna a: mAntennaCollection) {
             IDstrings.add(a.getTitle());
         }
         Spinner spinner_antenna = findViewById(R.id.spinner_antennas);
@@ -481,7 +459,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 TextView txt_search = findViewById(R.id.txt_search);
                 txt_search.setText(parent.getItemAtPosition(pos).toString());
                 try {
-                    displayAntenna(AntennaCollection.get(pos-1));
+                    displayAntenna(mAntennaCollection.get(pos-1));
                 }catch(Exception ex){}
             }
 
@@ -492,6 +470,49 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         });
 
+    }
+
+
+    private class ParseTask extends AsyncTask<ArrayList<String>,Void,ArrayList<Antenna>> {
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        protected void onPostExecute(ArrayList<Antenna> antColl) {
+            mAntennaCollection = antColl;
+            mClusterManager.addItems(antColl);
+            fillAntennaSpinner();
+        }
+
+        protected ArrayList<Antenna> doInBackground(ArrayList<String>... params) {
+            ArrayList<String> tmp = params[0];
+            String csvDelimiter = ";";
+            //ArrayList<String> tmp = FileHelper.ReadFile(this, filepath);
+            ArrayList<Antenna> AntennaCollection = new ArrayList<>();
+            tmp.remove(0);
+            for (String line : tmp) {
+                String[] lineArr = line.split(csvDelimiter);
+                try {
+                    String ID = lineArr[0];
+                    String extID = lineArr[1];
+                    String Address = lineArr[3] + ", " + lineArr[4] + ", " + lineArr[5];
+                    String klat = lineArr[7].replace(',', '.');
+                    String klong = lineArr[6].replace(',', '.');
+
+                    if (!klat.equalsIgnoreCase("#NV") && !klong.equalsIgnoreCase("#NV")) {
+                        //Create Antenna and add to Collection
+                        Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address, extID);
+
+                        AntennaCollection.add(tmp_ant);
+                        //change clustered Icons: https://stackoverflow.com/questions/36522305/android-cluster-manager-icon-depending-on-type
+                    }
+                }catch(Exception e){
+                    System.out.println(">>>>>>Error @ Parsing");
+                }
+            }
+            return AntennaCollection;
+        }
     }
     //NAVIGATION
     public void getDirectionsTo(View view) {
@@ -875,7 +896,5 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
         }
     }
-
-
 
 }
