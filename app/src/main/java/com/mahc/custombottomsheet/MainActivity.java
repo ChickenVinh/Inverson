@@ -13,8 +13,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -58,44 +56,27 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.squareup.picasso.Picasso;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
-
-import static com.android.volley.toolbox.Volley.newRequestQueue;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
     //CONSTANTS
     private final int REQUEST_LOCATION_PERMISSION = 1;
     private static final int DEFAULT_ZOOM = 12;
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
+
     private static final int MY_CAMERA_REQUEST_CODE = 100;
 
     private GoogleMap mMap;
+    private Context context = this;
     private ClusterManager<Antenna> mClusterManager;
     private ArrayList<Antenna> mAntennaCollection = new ArrayList<>();
     private String user;
@@ -130,6 +111,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
+        RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
 
         //Download Antennas
         downloadCSV();
@@ -302,7 +284,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         String get_url = getResources().getString(R.string.server_url) + "getLatest.php?antenna_ID=\"" + item.getTitle() + "\"";
-        RequestQueue queue = newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @Override
@@ -340,7 +321,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
 
         spin1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override
@@ -385,7 +366,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void downloadCSV(){
         progressDialog = ProgressDialog.show(MainActivity.this,"Download Antennas","Please Wait",false,false);
         String get_url = getResources().getString(R.string.URL_antennas);
-        RequestQueue queue = newRequestQueue(this);
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -396,8 +377,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         ArrayList<String>  lstAntennas = new ArrayList<String>(Arrays.asList(convtmp.split("\r\n")));
                         if(!lstAntennas.isEmpty()){
                             //parsePins(lstAntennas);
-                            ParseTask parse = new ParseTask();
-                            parse.execute(lstAntennas);
+                            ParseTask pt = new ParseTask();
+                            pt.execute(lstAntennas);
                         }else{
                             Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
                         }
@@ -411,7 +392,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
     }
     //
     private void httpGETupdate(String antenna_ID, String modul, String user, String status){
@@ -420,7 +401,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                                                         + "\"&module=\"" + modul
                                                                         + "\"&user=\"" + user
                                                                         + "\"";
-        RequestQueue queue = newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @Override
@@ -434,7 +414,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
     }
     //FILL ANTENNASPINNER
     public void fillAntennaSpinner() {
@@ -467,19 +447,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onNothingSelected(AdapterView<?> parent){
                 //Another interface callback
             }
-
         });
-
     }
-
-
+    //PARSE CSV TO ANTENNA LISTS
     private class ParseTask extends AsyncTask<ArrayList<String>,Void,ArrayList<Antenna>> {
+        /*
+        private WeakReference<MainActivity> activityReference;
+        ParseTask(MainActivity context) {
+            activityReference = new WeakReference<>(context);
+        }
+         */
         protected void onPreExecute() {
             super.onPreExecute();
 
         }
 
         protected void onPostExecute(ArrayList<Antenna> antColl) {
+            /*MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return;*/
             mAntennaCollection = antColl;
             mClusterManager.addItems(antColl);
             fillAntennaSpinner();
@@ -514,7 +499,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             return AntennaCollection;
         }
     }
-    //NAVIGATION
     public void getDirectionsTo(View view) {
         Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
                 Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
@@ -535,102 +519,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 page = 2;
                 break;
         }
-        intent.putExtra("One", page);
+        intent.putExtra("obj", page);
+        intent.putExtra("AntennaID",selectedAntenna.getTitle());
+        intent.putExtra("user",user);
         startActivity(intent);
     }
 
-    //START CAMERA
-    public void dispatchTakePictureIntent(View view) {
-        Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        switch (view.getId()){
-            case R.id.obj1_pic:
-                obj = getResources().getString(R.string.Object1);
-                objnr = R.string.Object1;
-                break;
-            case R.id.obj2_pic:
-                obj = getResources().getString(R.string.Object2);
-                objnr = R.string.Object2;
-                break;
-            case R.id.obj3_pic:
-                obj = getResources().getString(R.string.Object3);
-                objnr = R.string.Object3;
-                break;
-        }
-
-        //THUMBNAIL
-        if(imageIntent.resolveActivity(getPackageManager())!=null){
-            startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
-        }
-/*
-        //FULL SIZE PHOTO
-        if (imageIntent.resolveActivity(getPackageManager()) != null) {
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            if (photoFile != null) {
-                try {
-                    Uri photoURI = FileProvider.getUriForFile(this, getApplicationContext().getPackageName(), photoFile);
-                    imageIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                    startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-
-            }
-        }
-
-      */
-
-    }
-    //CAMERA RESULT
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        //if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
-            ImageButton campic = findViewById(objnr);
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-
-            //campic.setImageBitmap(imageBitmap);
-
-            try {
-                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
-                byte[] byteArrayVar = byteArrayOutputStreamObject.toByteArray();
-                uploadImgByteArray(byteArrayVar);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-/*
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
-            Uri uri = data.getData();
-            //show Thumbnail
-            ImageView imageView = (ImageView) findViewById(R.id.cam_pic);
-            imageView.setImageBitmap((Bitmap)data.getExtras().get("data"));
-
-            try {
-                // Adding captured image in bitmap.
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
-                byte[] byteArrayVar = byteArrayOutputStreamObject.toByteArray();
-                uploadImgByteArray(byteArrayVar);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-        */
-    }
-
+    //CREATING EMPTY IMG FILE
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -645,204 +540,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Save a file: path for use with ACTION_VIEW intents
         currentPhotoPath = image.getAbsolutePath();
         return image;
-    }
-    //UPLOAD IMG TO SERVER
-    private void uploadImgByteArray(byte[] b_arr){
-        final String ConvertImage = Base64.encodeToString(b_arr, Base64.DEFAULT);
-
-        class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
-
-            @Override
-            protected void onPreExecute() {
-
-                super.onPreExecute();
-
-                // Showing progress dialog at image upload time.
-                progressDialog = ProgressDialog.show(MainActivity.this,"Image is Uploading","Please Wait",false,false);
-            }
-
-            @Override
-            protected void onPostExecute(String string1) {
-
-                super.onPostExecute(string1);
-
-                // Dismiss the progress dialog after done uploading.
-                progressDialog.dismiss();
-                displayAntenna(selectedAntenna);
-                // Printing uploading success message coming from server on android app.
-                Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
-            }
-
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            protected String doInBackground(Void... params) {
-
-                HTTPProcessClass httpProcessClass = new HTTPProcessClass();
-
-                HashMap<String,String> HashMapParams = new HashMap<String,String>();
-
-                HashMapParams.put(ImageNameFieldOnServer, selectedAntenna.getTitle()
-                                                            + "_" + obj //ADD MODULE NAME
-                                                            + "_" + user);
-
-                HashMapParams.put(ImagePathFieldOnServer, ConvertImage);
-
-                String FinalData = httpProcessClass.ImageHttpRequest(getString(R.string.upload_script), HashMapParams);
-
-                return FinalData;
-            }
-        }
-
-
-        AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
-        AsyncTaskUploadClassOBJ.execute();
-    }
-
-    public class HTTPProcessClass{
-        public String LastImgHttpRequest(String reqURL){
-            try {
-                URL url = new URL(reqURL);
-                ByteArrayOutputStream bo = new ByteArrayOutputStream();
-                HttpURLConnection mUrlConnection = (HttpURLConnection) url.openConnection();
-                mUrlConnection.setDoInput(true);
-                int RC = mUrlConnection.getResponseCode();
-                if (RC == HttpsURLConnection.HTTP_OK) {
-                    InputStream is = new BufferedInputStream(mUrlConnection.getInputStream());
-                    int i = is.read();
-                    while (i != -1) {
-                        bo.write(i);
-                        i = is.read();
-                    }
-                }
-                return bo.toString();
-            }catch (Exception e){
-                e.printStackTrace();
-                return "";
-            }
-
-
-            /*StringBuilder stringBuilder = new StringBuilder();
-            try {
-                URL url;
-                HttpURLConnection httpURLConnectionObject ;
-                OutputStream OutPutStream;
-                BufferedReader bufferedReaderObject ;
-                int RC ;
-                url = new URL(reqURL);
-                httpURLConnectionObject = (HttpURLConnection) url.openConnection();
-                httpURLConnectionObject.setReadTimeout(19000);
-                httpURLConnectionObject.setConnectTimeout(19000);
-                httpURLConnectionObject.setRequestMethod("GET");
-                httpURLConnectionObject.setDoInput(true);
-                httpURLConnectionObject.setDoOutput(true);
-                RC = httpURLConnectionObject.getResponseCode();
-                if (RC == HttpsURLConnection.HTTP_OK) {
-
-                    bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
-
-                    stringBuilder = new StringBuilder();
-
-                    String RC2;
-
-                    while ((RC2 = bufferedReaderObject.readLine()) != null){
-                        stringBuilder.append(RC2);
-                    }
-                }
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-            return stringBuilder.toString();
-            */
-        }
-
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-        public String ImageHttpRequest(String requestURL, HashMap<String, String> PData) {
-
-            StringBuilder stringBuilder = new StringBuilder();
-
-            try {
-
-                URL url;
-                HttpURLConnection httpURLConnectionObject ;
-                OutputStream OutPutStream;
-                BufferedWriter bufferedWriterObject ;
-                BufferedReader bufferedReaderObject ;
-                int RC ;
-
-                url = new URL(requestURL);
-
-                httpURLConnectionObject = (HttpURLConnection) url.openConnection();
-
-                httpURLConnectionObject.setReadTimeout(19000);
-
-                httpURLConnectionObject.setConnectTimeout(19000);
-
-                httpURLConnectionObject.setRequestMethod("POST");
-
-                httpURLConnectionObject.setDoInput(true);
-
-                httpURLConnectionObject.setDoOutput(true);
-
-                OutPutStream = httpURLConnectionObject.getOutputStream();
-
-                bufferedWriterObject = new BufferedWriter(
-
-                        new OutputStreamWriter(OutPutStream, StandardCharsets.UTF_8));
-
-                bufferedWriterObject.write(bufferedWriterDataFN(PData));
-
-                bufferedWriterObject.flush();
-
-                bufferedWriterObject.close();
-
-                OutPutStream.close();
-
-                RC = httpURLConnectionObject.getResponseCode();
-
-                if (RC == HttpsURLConnection.HTTP_OK) {
-
-                    bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
-
-                    stringBuilder = new StringBuilder();
-
-                    String RC2;
-
-                    while ((RC2 = bufferedReaderObject.readLine()) != null){
-
-                        stringBuilder.append(RC2);
-                    }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return stringBuilder.toString();
-        }
-
-        private String bufferedWriterDataFN(HashMap<String, String> HashMapParams) throws UnsupportedEncodingException {
-
-            StringBuilder stringBuilderObject;
-
-            stringBuilderObject = new StringBuilder();
-
-            for (Map.Entry<String, String> KEY : HashMapParams.entrySet()) {
-
-                if (check)
-
-                    check = false;
-                else
-                    stringBuilderObject.append("&");
-
-                stringBuilderObject.append(URLEncoder.encode(KEY.getKey(), "UTF-8"));
-
-                stringBuilderObject.append("=");
-
-                stringBuilderObject.append(URLEncoder.encode(KEY.getValue(), "UTF-8"));
-            }
-
-            return stringBuilderObject.toString();
-        }
-
     }
     //MOVE TO OWN LOCATION
     private void getAndMoveToDeviceLocation(){
