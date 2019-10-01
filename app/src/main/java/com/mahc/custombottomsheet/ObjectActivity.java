@@ -28,10 +28,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ObjectActivity extends AppCompatActivity {
-    private int objnr, page;
-    private String selectedAntenna, user, obj;
+    private int page;
+    private String selectedAntenna, user;
+    private String[] obj;
+    private int[] objnr;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-    ProgressDialog progressDialog ;
+    ProgressDialog progressDialog;
     String ServerURL = "http://gastroconsultung-catering.com/getData.php";
     String ImageNameFieldOnServer = "image_name" ;
     String ImagePathFieldOnServer = "image_path" ;
@@ -39,6 +41,8 @@ public class ObjectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_object);
+        obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
+        objnr = new int[]{R.string.Object1, R.string.Object2, R.string.Object3};
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
@@ -52,39 +56,12 @@ public class ObjectActivity extends AppCompatActivity {
         page = getIntent().getIntExtra("obj", defaultValue);
         selectedAntenna = getIntent().getStringExtra("AntennaID");
         user = getIntent().getStringExtra("user");
-        switch (page){
-            case 0:
-                obj = getResources().getString(R.string.Object1);
-                objnr = R.string.Object1;
-                break;
-            case 1:
-                obj = getResources().getString(R.string.Object2);
-                objnr = R.string.Object2;
-                break;
-            case 2:
-                obj = getResources().getString(R.string.Object3);
-                objnr = R.string.Object3;
-                break;
-        }
+
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 //ON TAB SWITCH
                 page = tab.getPosition();
-                switch (page){
-                    case 0:
-                        obj = getResources().getString(R.string.Object1);
-                        objnr = R.string.Object1;
-                        break;
-                    case 1:
-                        obj = getResources().getString(R.string.Object2);
-                        objnr = R.string.Object2;
-                        break;
-                    case 2:
-                        obj = getResources().getString(R.string.Object3);
-                        objnr = R.string.Object3;
-                        break;
-                }
             }
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
@@ -146,7 +123,7 @@ public class ObjectActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         //if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            ImageButton campic = findViewById(objnr);
+            ImageButton campic = findViewById(objnr[page]);
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
 
@@ -212,7 +189,7 @@ public class ObjectActivity extends AppCompatActivity {
             {
                 Map<String, String>  params = new HashMap<String, String>();
                 params.put(ImageNameFieldOnServer, selectedAntenna
-                        + "_" + obj //ADD MODULE NAME
+                        + "_" + obj[page] //ADD MODULE NAME
                         + "_" + user);
                 params.put(ImagePathFieldOnServer, ConvertImage);
 
@@ -222,7 +199,6 @@ public class ObjectActivity extends AppCompatActivity {
 
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
     }
-
 
 
 }

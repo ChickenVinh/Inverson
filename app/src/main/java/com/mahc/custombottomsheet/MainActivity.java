@@ -67,6 +67,9 @@ import java.util.Locale;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+import timber.log.Timber;
+
+import static timber.log.Timber.DebugTree;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
     //CONSTANTS
@@ -101,7 +104,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        //Logger
+        Timber.plant(new DebugTree());
         //Get the Username from Login activity
         Intent suc = super.getIntent();
         user = suc.getStringExtra("User");
@@ -504,7 +508,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
         startActivity(intent);
     }
-
     public void startObjectActivity(View view){
         Intent intent = new Intent(MainActivity.this, ObjectActivity.class);
         //Pass Object number to get to right tab
@@ -524,7 +527,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         intent.putExtra("user",user);
         startActivity(intent);
     }
-
     //CREATING EMPTY IMG FILE
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -593,5 +595,4 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
         }
     }
-
-}
+    }
