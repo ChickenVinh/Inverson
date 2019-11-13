@@ -1,23 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/constraintLayout"
+    android:id="@+id/LinearVLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ui.main.PlaceholderFragment">
 
     <TextView
         android:id="@+id/section_label"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:layout_marginBottom="@dimen/activity_vertical_margin"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintTop_creator="1" />
+        android:text="Object Name"
+        android:textSize="24sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:text="dd/mm/yyyy" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="173dp"
+        android:layout_marginBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/objImg1"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5px"
+                android:layout_marginEnd="5px"
+                android:layout_weight="1"
+                android:background="#61B4B4B4"
+                android:contentDescription="Image1"
+                tools:src="@tools:sample/avatars" />
+
+            <ImageView
+                android:id="@+id/objImg2"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5px"
+                android:layout_marginEnd="5px"
+                android:layout_weight="1"
+                android:background="#61B4B4B4"
+                android:contentDescription="Image2"
+                tools:src="@tools:sample/avatars" />
+
+            <ImageView
+                android:id="@+id/objImg3"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5px"
+                android:layout_marginEnd="5px"
+                android:layout_weight="1"
+                android:background="#61B4B4B4"
+                android:contentDescription="Image3"
+                tools:src="@tools:sample/avatars" />
+
+            <ImageView
+                android:id="@+id/objImg4"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5px"
+                android:layout_marginEnd="5px"
+                android:layout_weight="1"
+                android:background="#61B4B4B4"
+                android:contentDescription="Image4"
+                tools:src="@tools:sample/avatars" />
+
+            <ImageView
+                android:id="@+id/objImg5"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="5px"
+                android:layout_marginEnd="5px"
+                android:layout_weight="1"
+                android:background="#61B4B4B4"
+                android:contentDescription="Image5"
+                tools:src="@tools:sample/avatars" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <EditText
+        android:id="@+id/editText2"
+        android:layout_width="match_parent"
+        android:layout_height="166dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="Comments...."
+        android:inputType="textMultiLine" />
+
+</LinearLayout>

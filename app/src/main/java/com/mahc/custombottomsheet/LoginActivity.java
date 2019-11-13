@@ -6,7 +6,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -21,22 +20,21 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+
+import timber.log.Timber;
+
 /**
  * A login screen that offers login via user/password.
  */
 public class LoginActivity extends AppCompatActivity {
 
     /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "abcdef:123456", "admin:admin"
-    };
-    /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
     SharedPreferences sharedpreferences;
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -46,11 +44,7 @@ public class LoginActivity extends AppCompatActivity {
     private boolean isLoggedIn = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        /*
-        try {
-            Thread.sleep(1000);
-        }catch (Exception x){}
-        */
+
         setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
@@ -113,9 +107,6 @@ public class LoginActivity extends AppCompatActivity {
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
 
         // Reset errors.
         mEmailView.setError(null);
@@ -161,9 +152,37 @@ public class LoginActivity extends AppCompatActivity {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            queryServer(email,password);
+
         }
+    }
+
+    private void queryServer(String qemail, String qpassword){
+        String url = getResources().getString(R.string.server_login_url)
+                                                                        +"?email="+qemail
+                                                                        +"&password="+qpassword;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        showProgress(false);
+                        if(response.equals("1")) {//login success
+                            Intent suc = new Intent(LoginActivity.this, MainActivity.class);
+                            suc.putExtra("User", mEmailView.getText().toString());
+                            startActivity(suc);
+                        }else if(response.equals("0")){//login failed
+                            mPasswordView.setError(getString(R.string.error_incorrect_password));
+                            mPasswordView.requestFocus();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Timber.d(error);
+                showProgress(false);
+            }
+        });
+        RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
     }
 
     private boolean isUserValid(String email) {
@@ -211,69 +230,4 @@ public class LoginActivity extends AppCompatActivity {
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
-
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return false;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {  //Successfull Login
-                finish();
-                //download Markers
-
-                //start Map Activity
-                Intent suc = new Intent(LoginActivity.this, MainActivity.class);
-                suc.putExtra("User", mEmailView.getText().toString());
-                startActivity(suc);
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
-        }
-    }
-
 }

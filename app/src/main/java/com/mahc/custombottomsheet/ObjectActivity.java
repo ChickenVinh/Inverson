@@ -3,6 +3,7 @@ package com.mahc.custombottomsheet;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
@@ -29,7 +31,8 @@ import java.util.Map;
 
 public class ObjectActivity extends AppCompatActivity {
     private int page;
-    private String selectedAntenna, user;
+    private String user;
+    private Antenna selectedAntenna;
     private String[] obj;
     private int[] objnr;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -41,8 +44,6 @@ public class ObjectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_object);
-        obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
-        objnr = new int[]{R.string.Object1, R.string.Object2, R.string.Object3};
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
         ViewPager viewPager = findViewById(R.id.view_pager);
@@ -50,13 +51,15 @@ public class ObjectActivity extends AppCompatActivity {
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
         FloatingActionButton fab = findViewById(R.id.fab);
+        obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
+        objnr = new int[]{R.string.Object1, R.string.Object2, R.string.Object3};
         //select right Tab
         int defaultValue = 0;
         //GET INTENT EXTRAS
         page = getIntent().getIntExtra("obj", defaultValue);
-        selectedAntenna = getIntent().getStringExtra("AntennaID");
+        selectedAntenna = getIntent().getParcelableExtra("Antenna");
         user = getIntent().getStringExtra("user");
-
+        //GET SELECTED TAB
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -192,12 +195,30 @@ public class ObjectActivity extends AppCompatActivity {
                         + "_" + obj[page] //ADD MODULE NAME
                         + "_" + user);
                 params.put(ImagePathFieldOnServer, ConvertImage);
-
                 return params;
             }
         };
-
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
+    }
+
+//GET PATHES TO ALL PICTURES
+    private void grabPictures(String antenna){
+        String get_url = "http://gastroconsultung-catering.com/getPics.php?ant=" + antenna;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                    @Override
+                    public void onResponse(String response) {
+                        System.out.println(response);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        // Add the request to the RequestQueue.
+        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
     }
 
 

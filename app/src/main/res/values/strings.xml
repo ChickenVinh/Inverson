@@ -11,11 +11,13 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
-    <string name="URL_antennas">http://gastroconsultung-catering.com/infos.csv</string>
+    <string name="URL_antennasCSV">http://gastroconsultung-catering.com/infos.csv</string>
+    <string name="URL_antennas">http://gastroconsultung-catering.com/getAllAntennas.php</string>
     <string name="error_antenna_not_found">Antenna not Found!</string>
     <string name="searchbar_hint">Enter ID, Address or City</string>
     <string name="upload_script">http://gastroconsultung-catering.com/upload.php</string>
     <string name="server_url">http://gastroconsultung-catering.com/</string>
+    <string name="server_login_url">http://gastroconsultung-catering.com/testing/vinh/login.php</string>
     <string name="Object1">Object-1</string>
     <string name="Object2">Object-2</string>
     <string name="Object3">Object-3</string>
