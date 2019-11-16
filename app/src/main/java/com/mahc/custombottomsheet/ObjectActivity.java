@@ -81,7 +81,6 @@ public class ObjectActivity extends AppCompatActivity {
             }
         });
         viewPager.setCurrentItem(page);
-
 /*
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,7 +91,6 @@ public class ObjectActivity extends AppCompatActivity {
         });
 
  */
-
     }
     //START CAMERA
     public void dispatchTakePictureIntent(View view) {
@@ -138,7 +136,6 @@ public class ObjectActivity extends AppCompatActivity {
 
             //campic.setImageBitmap(imageBitmap);
             uploadImgByteArray(imageBitmap);
-
         }
 /*
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
@@ -214,7 +211,6 @@ public class ObjectActivity extends AppCompatActivity {
         try {
             Thread.sleep(1000);
         }catch (Exception ex){}
-
         this.recreate();
     }
 

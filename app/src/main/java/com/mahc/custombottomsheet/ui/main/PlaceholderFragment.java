@@ -36,8 +36,10 @@ public class PlaceholderFragment extends Fragment {
 
     private PageViewModel pageViewModel;
     private LinearLayout linearLayout;
+    private TextView commentView;
     private String[] obj;
     private int index = 1;
+    private String antenna;
 
     public static PlaceholderFragment newInstance(int index) {
         PlaceholderFragment fragment = new PlaceholderFragment();
@@ -52,10 +54,12 @@ public class PlaceholderFragment extends Fragment {
         super.onCreate(savedInstanceState);
         obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
         pageViewModel = ViewModelProviders.of(this).get(PageViewModel.class);
+        antenna = ((ObjectActivity) getActivity()).getAntennaID();
         if (getArguments() != null) {
             index = getArguments().getInt(ARG_SECTION_NUMBER);
         }
         pageViewModel.setIndex(index);
+        pageViewModel.setAntenna(antenna);
     }
 
     @Override
@@ -65,18 +69,31 @@ public class PlaceholderFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_main, container, false);
         final TextView textView = root.findViewById(R.id.section_label);
         linearLayout = root.findViewById(R.id.imgLayout);
+        commentView = root.findViewById(R.id.commentView);
         pageViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
+        setCommentObserver();
         ObjectActivity parent = (ObjectActivity) getActivity();
-        grabPictures(((ObjectActivity) getActivity()).getAntennaID());
+        grabPictures(antenna);
         //Get the Photos taken here
         return root;
     }
-
+    private void setCommentObserver(){
+        pageViewModel.getComments().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                if(s.equals("0")){
+                    commentView.setHint(R.string.no_comment);
+                }else{
+                    commentView.setText(s);
+                }
+            }
+        });
+    }
     //GET PATHES TO ALL PICTURES
     private void grabPictures(String antenna) {
         String get_url = "http://gastroconsultung-catering.com/getPics.php?ant=\"" + antenna + "\"";
