@@ -3,17 +3,17 @@ package com.mahc.custombottomsheet;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 
 import com.android.volley.Request;
@@ -23,6 +23,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
+import com.mahc.custombottomsheet.ui.main.PageViewModel;
 import com.mahc.custombottomsheet.ui.main.SectionsPagerAdapter;
 
 import java.io.ByteArrayOutputStream;
@@ -40,15 +41,20 @@ public class ObjectActivity extends AppCompatActivity {
     String ServerURL = "http://gastroconsultung-catering.com/getData.php";
     String ImageNameFieldOnServer = "image_name" ;
     String ImagePathFieldOnServer = "image_path" ;
+    ImageView[] objImg = new ImageView[4];
+    TabLayout tabs;
+    ViewPager viewPager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_object);
+        PageViewModel model = ViewModelProviders.of(this).get(PageViewModel.class);
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
-        ViewPager viewPager = findViewById(R.id.view_pager);
+        viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(sectionsPagerAdapter);
-        TabLayout tabs = findViewById(R.id.tabs);
+        tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
         FloatingActionButton fab = findViewById(R.id.fab);
         obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
@@ -59,6 +65,7 @@ public class ObjectActivity extends AppCompatActivity {
         page = getIntent().getIntExtra("obj", defaultValue);
         selectedAntenna = getIntent().getParcelableExtra("Antenna");
         user = getIntent().getStringExtra("user");
+
         //GET SELECTED TAB
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -68,14 +75,13 @@ public class ObjectActivity extends AppCompatActivity {
             }
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
             }
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
             }
         });
         viewPager.setCurrentItem(page);
+
 /*
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,6 +182,7 @@ public class ObjectActivity extends AppCompatActivity {
                         // response
                         Log.d("Response", response);
                         Toast.makeText(getBaseContext(), response, Toast.LENGTH_SHORT).show();
+                        reloadTab();
                     }
                 },
                 new Response.ErrorListener()
@@ -200,26 +207,15 @@ public class ObjectActivity extends AppCompatActivity {
         };
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
     }
-
-//GET PATHES TO ALL PICTURES
-    private void grabPictures(String antenna){
-        String get_url = "http://gastroconsultung-catering.com/getPics.php?ant=" + antenna;
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
-                new Response.Listener<String>() {
-                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                    @Override
-                    public void onResponse(String response) {
-                        System.out.println(response);
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-            }
-        });
-        // Add the request to the RequestQueue.
-        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
+    public String getAntennaID(){
+        return selectedAntenna.getTitle();
     }
+    private void reloadTab(){
+        try {
+            Thread.sleep(1000);
+        }catch (Exception ex){}
 
+        this.recreate();
+    }
 
 }
