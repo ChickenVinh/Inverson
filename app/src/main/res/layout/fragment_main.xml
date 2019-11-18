@@ -41,6 +41,13 @@
         android:enabled="false"
         android:gravity="start|top"
         android:hint="@string/loading_comment"
-        android:inputType="textMultiLine" />
+        android:inputType="textMultiLine"
+        android:textColor="@color/common_google_signin_btn_text_dark_focused" />
+
+    <Button
+        android:id="@+id/btnEditSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit" />
 
 </LinearLayout>

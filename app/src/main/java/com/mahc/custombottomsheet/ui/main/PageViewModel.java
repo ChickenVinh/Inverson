@@ -59,20 +59,14 @@ public class PageViewModel extends AndroidViewModel {
 
     //GET PATHES TO ALL PICTURES
     private void grabComments(String antenna) {
-        String get_url = getApplication().getResources().getString(R.string.module_script_URL)+"?antenna_ID=\"" + antenna + "\"";
+        String get_url = getApplication().getResources().getString(R.string.getComment_script)+"?antenna_ID=\"" + antenna + "\"&module=\"" + obj[mIndex.getValue()-1] + "\"";
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
-                        String[] split = response.split("#####");
-                        for (String s:split){
-                            if(s.contains(obj[mIndex.getValue()-1])){
-                                String c = s.split("###")[3];
-                                mComment.setValue(c);
-                            }
-                        }
+                        mComment.setValue(response.replaceAll("__NEWLINE__","\n"));
                     }
                 }, new Response.ErrorListener() {
             @Override

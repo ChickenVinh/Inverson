@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +26,8 @@ import com.mahc.custombottomsheet.ObjectActivity;
 import com.mahc.custombottomsheet.R;
 import com.mahc.custombottomsheet.RequestQueueSingleton;
 import com.squareup.picasso.Picasso;
+import com.stfalcon.imageviewer.StfalconImageViewer;
+import com.stfalcon.imageviewer.loader.ImageLoader;
 
 import java.util.ArrayList;
 
@@ -40,6 +44,7 @@ public class PlaceholderFragment extends Fragment {
     private String[] obj;
     private int index = 1;
     private String antenna;
+    ArrayList<String> imgPathes = new ArrayList<>();
 
     public static PlaceholderFragment newInstance(int index) {
         PlaceholderFragment fragment = new PlaceholderFragment();
@@ -60,6 +65,8 @@ public class PlaceholderFragment extends Fragment {
         }
         pageViewModel.setIndex(index);
         pageViewModel.setAntenna(antenna);
+        //Picasso.with(getContext()).setIndicatorsEnabled(true);
+
     }
 
     @Override
@@ -70,6 +77,13 @@ public class PlaceholderFragment extends Fragment {
         final TextView textView = root.findViewById(R.id.section_label);
         linearLayout = root.findViewById(R.id.imgLayout);
         commentView = root.findViewById(R.id.commentView);
+        Button btnEditSave = root.findViewById(R.id.btnEditSave);
+        btnEditSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editSendComment(view);
+            }
+        });
         pageViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -86,7 +100,7 @@ public class PlaceholderFragment extends Fragment {
         pageViewModel.getComments().observe(this, new Observer<String>() {
             @Override
             public void onChanged(String s) {
-                if(s.equals("0")){
+                if(s.isEmpty()){
                     commentView.setHint(R.string.no_comment);
                 }else{
                     commentView.setText(s);
@@ -103,7 +117,7 @@ public class PlaceholderFragment extends Fragment {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
-                        parsePicResult(response);
+                        parseResultAndShowPics(response);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -114,23 +128,68 @@ public class PlaceholderFragment extends Fragment {
         RequestQueueSingleton.getInstance(getActivity().getApplicationContext()).addToRequestQueue(stringRequest);
     }
 
-    private void parsePicResult(String response) {
-        ArrayList<String> pathes = new ArrayList<>();
-
+    private void parseResultAndShowPics(String response) {
         for (String s : response.split("###")) {
             String objekt = obj[index-1];
             if (s.contains(objekt)) {
-                pathes.add(s.split("#")[4]);
+                imgPathes.add(getResources().getString(R.string.server_url)+s.split("#")[4]);
             }
         }
 
-        for (int i = 0; i < pathes.size(); i++) {
+        for (int i = 0; i < imgPathes.size(); i++) {
             ImageView img = new ImageView(getActivity());
             img.setLayoutParams(new LinearLayout.LayoutParams((int)getContext().getResources().getDisplayMetrics().density * 150,
                     LinearLayout.LayoutParams.MATCH_PARENT));
             //img.setImageResource(R.drawable.ic_ex_img);
-            Picasso.with(img.getContext()).load(getResources().getString(R.string.server_url) + pathes.get(i)).into(img);
+            Picasso.with(img.getContext()).load(imgPathes.get(i)).into(img);
+            img.setId(i);
+            img.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    openImageFull(imgPathes.toArray(new String[0]),v.getId());
+                }
+            });
             linearLayout.addView(img);
         }
     }
+    private void openImageFull(final String[] imgList, int index){
+        new StfalconImageViewer.Builder<>(getContext(), imgList, new ImageLoader<String>() {
+
+            @Override
+            public void loadImage(ImageView imageView, String image) {
+                Picasso.with(getContext()).load(image).into(imageView);
+            }
+        }).withStartPosition(index).show();
+    }
+    public void editSendComment(View v) {
+        if(!commentView.isEnabled()){
+            commentView.setEnabled(true);
+            ((Button) v).setText("Save");
+        }else{
+            commentView.setEnabled(false);
+            ((Button) v).setText("Edit");
+            //upload Comment
+            String get_url = getActivity().getResources().getString(R.string.upload_script)+"?antenna_ID=\""
+                    + antenna
+                    + "\"&module=\"" + obj[index-1]
+                    + "\"&comment=\"" + commentView.getText().toString().replaceAll("\n","__NEWLINE__")
+                    + "\"";
+
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                    new Response.Listener<String>() {
+                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                        @Override
+                        public void onResponse(String response) {
+                            Toast.makeText(getContext(),response,Toast.LENGTH_LONG).show();
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(getContext(),"Network Error, comment not uploaded",Toast.LENGTH_LONG).show();
+                }
+            });
+            // Add the request to the RequestQueue.
+            RequestQueueSingleton.getInstance(getContext()).addToRequestQueue(stringRequest);
+        }
+    }
+
 }

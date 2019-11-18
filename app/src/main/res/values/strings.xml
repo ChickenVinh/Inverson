@@ -18,6 +18,7 @@
     <string name="error_antenna_not_found">Antenna not Found!</string>
     <string name="searchbar_hint">Enter ID, Address or City</string>
     <string name="upload_script">http://gastroconsultung-catering.com/upload.php</string>
+    <string name="getComment_script">http://gastroconsultung-catering.com/getComment.php</string>
     <string name="server_url">http://gastroconsultung-catering.com/</string>
     <string name="server_login_url">http://gastroconsultung-catering.com/testing/vinh/login.php</string>
     <string name="Object1">Object-1</string>

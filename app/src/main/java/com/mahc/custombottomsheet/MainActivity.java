@@ -210,8 +210,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 return true;
             }
         });
-
-
         // Show Vietnam
         LatLng vietnam = new LatLng(16, 106.5);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,5.5f));
@@ -289,12 +287,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         obj3_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
 
 
-        String get_url = getResources().getString(R.string.server_url) + "getLatest.php?antenna_ID=\"" + item.getTitle() + "\"";
+        String get_url = getResources().getString(R.string.module_script_URL) + "?antenna_ID=\"" + item.getTitle() + "\"";
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        String[] res = response.split("\n");
+                        String[] res = response.split("#####");
                         if(!response.equals("")) {
                             for (String s : res) {
                                 String module = s.split("###")[0];
@@ -401,9 +399,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
     }
     private void addAntennasToCollection(ArrayList<Antenna> tmp_ant){
-        mAntennaCollection = tmp_ant;
-        mClusterManager.addItems(mAntennaCollection);
-        fillAntennaSpinner();
+        if(tmp_ant.size()>0) {
+            mAntennaCollection = tmp_ant;
+            mClusterManager.addItems(mAntennaCollection);
+            fillAntennaSpinner();
+        }else{
+            Toast.makeText(getApplicationContext(), "No Antenna Data Received!", Toast.LENGTH_LONG).show();
+        }
     }
     private void getAndParseAntennas(){
 

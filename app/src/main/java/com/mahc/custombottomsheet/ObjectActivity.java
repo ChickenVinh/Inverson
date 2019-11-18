@@ -3,15 +3,19 @@ package com.mahc.custombottomsheet;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
@@ -211,7 +215,44 @@ public class ObjectActivity extends AppCompatActivity {
         try {
             Thread.sleep(1000);
         }catch (Exception ex){}
-        this.recreate();
+        Intent intent = new Intent(ObjectActivity.this, ObjectActivity.class);
+        intent.putExtra("obj", page);
+        intent.putExtra("Antenna",selectedAntenna);
+        intent.putExtra("user",user);
+        startActivity(intent);
+        finish();
     }
 
+    public void editSendComment(View v) {
+        TextView commentView = findViewById(R.id.commentView);
+        if(!commentView.isEnabled()){
+            commentView.setEnabled(true);
+            ((Button) v).setText("Save");
+        }else{
+            commentView.setEnabled(false);
+            ((Button) v).setText("Edit");
+            //upload Comment
+            String get_url = getApplication().getResources().getString(R.string.upload_script)+"?antenna_ID=\""
+                    + selectedAntenna.getTitle()
+                    + "\"&module=\"" + obj[page]
+                    + "\"&comment=\"" + commentView.getText()
+                    + "\"";
+
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                    new Response.Listener<String>() {
+                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                        @Override
+                        public void onResponse(String response) {
+                            Toast.makeText(getBaseContext(),response,Toast.LENGTH_LONG).show();
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(getBaseContext(),"Network Error, comment not uploaded",Toast.LENGTH_LONG).show();
+                }
+            });
+            // Add the request to the RequestQueue.
+            RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
+        }
+    }
 }
