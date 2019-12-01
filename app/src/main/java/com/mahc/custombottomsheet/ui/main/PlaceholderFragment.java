@@ -38,6 +38,7 @@ public class PlaceholderFragment extends Fragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
+    private ObjectActivity parent;
     private PageViewModel pageViewModel;
     private LinearLayout linearLayout;
     private TextView commentView;
@@ -59,7 +60,8 @@ public class PlaceholderFragment extends Fragment {
         super.onCreate(savedInstanceState);
         obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
         pageViewModel = ViewModelProviders.of(this).get(PageViewModel.class);
-        antenna = ((ObjectActivity) getActivity()).getAntennaID();
+        parent = (ObjectActivity) getActivity();
+        antenna = parent.getAntennaID();
         if (getArguments() != null) {
             index = getArguments().getInt(ARG_SECTION_NUMBER);
         }
@@ -91,7 +93,6 @@ public class PlaceholderFragment extends Fragment {
             }
         });
         setCommentObserver();
-        ObjectActivity parent = (ObjectActivity) getActivity();
         grabPictures(antenna);
         //Get the Photos taken here
         return root;
@@ -127,7 +128,6 @@ public class PlaceholderFragment extends Fragment {
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(getActivity().getApplicationContext()).addToRequestQueue(stringRequest);
     }
-
     private void parseResultAndShowPics(String response) {
         for (String s : response.split("###")) {
             String objekt = obj[index-1];
@@ -171,7 +171,8 @@ public class PlaceholderFragment extends Fragment {
             String get_url = getActivity().getResources().getString(R.string.upload_script)+"?antenna_ID=\""
                     + antenna
                     + "\"&module=\"" + obj[index-1]
-                    + "\"&comment=\"" + commentView.getText().toString().replaceAll("\n","__NEWLINE__")
+                    + "\"&comment=\"" + commentView.getText().toString().replaceAll("\n","__NEWLINE__").replaceAll("#","+")
+                    + "\"&user=\"" + parent.getUser()
                     + "\"";
 
             StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,

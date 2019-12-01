@@ -156,13 +156,12 @@
                     android:layout_height="40dp"
                     android:text="@string/Object1" />
 
-                <Spinner
-                    android:id="@+id/spinner1"
+                <TextView
+                    android:id="@+id/textView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:entries="@array/status_array"
-                    android:tag="@string/Object1" />
+                    android:text="Module operating correctly"
+                    android:textColor="@color/design_default_color_secondary_variant" />
             </LinearLayout>
 
             <LinearLayout
@@ -176,13 +175,12 @@
                     android:layout_height="40dp"
                     android:text="@string/Object2" />
 
-                <Spinner
-                    android:id="@+id/spinner2"
+                <TextView
+                    android:id="@+id/textView2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:entries="@array/status_array"
-                    android:tag="@string/Object2" />
+                    android:text="Module operating correctly"
+                    android:textColor="@color/design_default_color_secondary_variant" />
             </LinearLayout>
 
             <LinearLayout
@@ -196,19 +194,25 @@
                     android:layout_height="40dp"
                     android:text="@string/Object3" />
 
-                <Spinner
-                    android:id="@+id/spinner3"
+                <TextView
+                    android:id="@+id/textView3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:contentDescription="Please upload Picture first!"
-                    android:entries="@array/status_array"
-                    android:tag="@string/Object3" />
+                    android:text="Module operating correctly"
+                    android:textColor="@color/design_default_color_secondary_variant" />
             </LinearLayout>
 
         </LinearLayout>
 
     </RelativeLayout>
+
+    <Button
+        android:id="@+id/btnTicket"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="startObjectActivity"
+        android:text="Create Ticket" />
 
     <ImageView
         android:id="@+id/cam_pic"

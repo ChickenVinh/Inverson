@@ -211,6 +211,9 @@ public class ObjectActivity extends AppCompatActivity {
     public String getAntennaID(){
         return selectedAntenna.getTitle();
     }
+    public String getUser() {
+        return user;
+    }
     private void reloadTab(){
         try {
             Thread.sleep(1000);
