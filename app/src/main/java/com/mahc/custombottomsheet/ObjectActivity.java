@@ -1,16 +1,12 @@
 package com.mahc.custombottomsheet;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Base64;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,9 +26,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.mahc.custombottomsheet.ui.main.PageViewModel;
 import com.mahc.custombottomsheet.ui.main.SectionsPagerAdapter;
 
-import java.io.ByteArrayOutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 
 public class ObjectActivity extends AppCompatActivity {
     private int page;
@@ -41,6 +35,7 @@ public class ObjectActivity extends AppCompatActivity {
     private String[] obj;
     private int[] objnr;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    String ticketID;
     ProgressDialog progressDialog;
     String ServerURL = "http://gastroconsultung-catering.com/getData.php";
     String ImageNameFieldOnServer = "image_name" ;
@@ -61,6 +56,7 @@ public class ObjectActivity extends AppCompatActivity {
         tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
         FloatingActionButton fab = findViewById(R.id.fab);
+
         obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
         objnr = new int[]{R.string.Object1, R.string.Object2, R.string.Object3};
         //select right Tab
@@ -69,7 +65,10 @@ public class ObjectActivity extends AppCompatActivity {
         page = getIntent().getIntExtra("obj", defaultValue);
         selectedAntenna = getIntent().getParcelableExtra("Antenna");
         user = getIntent().getStringExtra("user");
-
+        ticketID = UUID.randomUUID().toString().replaceAll("-","").substring(0,10);
+        TextView txtID = findViewById(R.id.txtAntID);
+        txtID.setText(getAntennaID());
+        openTicket();
         //GET SELECTED TAB
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -93,128 +92,17 @@ public class ObjectActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
  */
     }
-    //START CAMERA
-    public void dispatchTakePictureIntent(View view) {
-        Intent imageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        //THUMBNAIL
-        if(imageIntent.resolveActivity(getPackageManager())!=null){
-            startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
-        }
-/*
-        //FULL SIZE PHOTO
-        if (imageIntent.resolveActivity(getPackageManager()) != null) {
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
 
-            if (photoFile != null) {
-                try {
-                    Uri photoURI = FileProvider.getUriForFile(this, getApplicationContext().getPackageName(), photoFile);
-                    imageIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                    startActivityForResult(imageIntent, REQUEST_IMAGE_CAPTURE);
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-
-            }
-        }
-
-      */
-
-    }
-    //CAMERA RESULT
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        //if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            ImageButton campic = findViewById(objnr[page]);
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-
-            //campic.setImageBitmap(imageBitmap);
-            uploadImgByteArray(imageBitmap);
-        }
-/*
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
-            Uri uri = data.getData();
-            //show Thumbnail
-            ImageView imageView = (ImageView) findViewById(R.id.cam_pic);
-            imageView.setImageBitmap((Bitmap)data.getExtras().get("data"));
-
-            try {
-                // Adding captured image in bitmap.
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
-                byte[] byteArrayVar = byteArrayOutputStreamObject.toByteArray();
-                uploadImgByteArray(byteArrayVar);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
-        */
-    }
-    //UPLOAD IMG TO SERVER
-    private void uploadImgByteArray(Bitmap bmp){
-        ByteArrayOutputStream byteArrayOutputStreamObject = new ByteArrayOutputStream();
-        byte[] b_arr = null;
-        String url = getString(R.string.upload_script);
-        try {
-            bmp.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStreamObject);
-            b_arr = byteArrayOutputStreamObject.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        final String ConvertImage = Base64.encodeToString(b_arr, Base64.DEFAULT);
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        // response
-                        Log.d("Response", response);
-                        Toast.makeText(getBaseContext(), response, Toast.LENGTH_SHORT).show();
-                        reloadTab();
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // error
-                        Log.d("Error.Response", error.getMessage());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put(ImageNameFieldOnServer, selectedAntenna
-                        + "_" + obj[page] //ADD MODULE NAME
-                        + "_" + user);
-                params.put(ImagePathFieldOnServer, ConvertImage);
-                return params;
-            }
-        };
-        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
-    }
     public String getAntennaID(){
         return selectedAntenna.getTitle();
     }
     public String getUser() {
         return user;
     }
-    private void reloadTab(){
+    public String getTicketID(){return ticketID;}
+    public void reloadTab(){
         try {
             Thread.sleep(1000);
         }catch (Exception ex){}
@@ -225,37 +113,52 @@ public class ObjectActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+    private void openTicket(){
+        String get_url = getResources().getString(R.string.openclose_ticket)
+                +"?ticketID="+getTicketID()
+                +"&user="+getUser()
+                +"&action="+"open"
+                +"&antID="+getAntennaID();
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                    @Override
+                    public void onResponse(final String response) {
+                        if(response.contains("AlreadyOpen")){//there is already a ticket on that antenna!
+                            //EDIT TICKET DIALOG?
+                            DialogInterface.OnClickListener editTicketdialogClickListener = new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    switch (which){
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            ticketID=response.split(":")[1];
+                                            Toast.makeText(getBaseContext(),"Editing Ticket: " + ticketID,Toast.LENGTH_LONG).show();
+                                            break;
 
-    public void editSendComment(View v) {
-        TextView commentView = findViewById(R.id.commentView);
-        if(!commentView.isEnabled()){
-            commentView.setEnabled(true);
-            ((Button) v).setText("Save");
-        }else{
-            commentView.setEnabled(false);
-            ((Button) v).setText("Edit");
-            //upload Comment
-            String get_url = getApplication().getResources().getString(R.string.upload_script)+"?antenna_ID=\""
-                    + selectedAntenna.getTitle()
-                    + "\"&module=\"" + obj[page]
-                    + "\"&comment=\"" + commentView.getText()
-                    + "\"";
-
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
-                    new Response.Listener<String>() {
-                        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                        @Override
-                        public void onResponse(String response) {
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            finish();
+                                            break;
+                                    }
+                                }
+                            };
+                            AlertDialog.Builder builder = new AlertDialog.Builder(ObjectActivity.this);
+                            builder.setMessage("Antenna already has a open ticket!\nWant to edit that?").setPositiveButton("Yes", editTicketdialogClickListener)
+                                    .setNegativeButton("No", editTicketdialogClickListener).show();
+                        }else{//create new Ticket
                             Toast.makeText(getBaseContext(),response,Toast.LENGTH_LONG).show();
                         }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(getBaseContext(),"Network Error, comment not uploaded",Toast.LENGTH_LONG).show();
-                }
-            });
-            // Add the request to the RequestQueue.
-            RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
-        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getBaseContext(),"Ticket generation Failed:" + error.getMessage(),Toast.LENGTH_LONG).show();
+                finish();
+            }
+        });
+        // Add the request to the RequestQueue.
+        RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+    }
+
+    public void closeTicket(View view) {
     }
 }

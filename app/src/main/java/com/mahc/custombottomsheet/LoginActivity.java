@@ -158,8 +158,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void queryServer(String qemail, String qpassword){
+        //http://gastroconsultung-catering.com/testing/vinh/login.php?user=admin&password=admin
         String url = getResources().getString(R.string.server_login_url)
-                                                                        +"?email="+qemail
+                                                                        +"?user="+qemail
                                                                         +"&password="+qpassword;
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {

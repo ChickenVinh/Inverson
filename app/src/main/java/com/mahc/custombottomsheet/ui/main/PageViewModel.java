@@ -22,6 +22,7 @@ public class PageViewModel extends AndroidViewModel {
 
     private MutableLiveData<Integer> mIndex = new MutableLiveData<>();
     private String antenna = "";
+    private String module = "";
     private String[] obj = {getApplication().getResources().getString(R.string.Object1),
                             getApplication().getResources().getString(R.string.Object2),
                             getApplication().getResources().getString(R.string.Object3)};
@@ -32,19 +33,26 @@ public class PageViewModel extends AndroidViewModel {
         }
     });
     private MutableLiveData<String> mComment;
-
     LiveData<String> getComments() {
         if (mComment == null) {
             mComment = new MutableLiveData<>();
-            grabComments(antenna);
+            grabComments();
         }
         return mComment;
     }
-
-    public void setAntenna(String antenna) {
-        this.antenna = antenna;
+    private MutableLiveData<String> mStatus;
+    LiveData<String> getStatus() {
+        if (mStatus == null) {
+            mStatus = new MutableLiveData<>();
+            grabStatus();
+        }
+        return mStatus;
     }
 
+    public void setAntennaModule(String antenna, String module) {
+        this.antenna = antenna;
+        this.module = module;
+    }
     public PageViewModel(@NonNull Application application) {
         super(application);
     }
@@ -58,15 +66,20 @@ public class PageViewModel extends AndroidViewModel {
     }
 
     //GET PATHES TO ALL PICTURES
-    private void grabComments(String antenna) {
-        String get_url = getApplication().getResources().getString(R.string.getComment_script)+"?antenna_ID=\"" + antenna + "\"&module=\"" + obj[mIndex.getValue()-1] + "\"";
-
+    private void grabComments() {
+        String get_url = getApplication().getResources().getString(R.string.comment_script)
+                +"?antID=" + antenna
+                + "&module=" + module
+                +"&action=get";
+        //http://gastroconsultung-catering.com/comment.php?antID=10AGG1001&module=Modul69&action=get
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
-                        mComment.setValue(response.replaceAll("__NEWLINE__","\n"));
+                        mComment.setValue(response
+                                .replaceAll(getApplication().getResources().getString(R.string.new_line_placeholder),"\n")  //New lines(\n) dissappear in DB
+                                .replaceAll(getApplication().getResources().getString(R.string.cross_placeholder),"#"));    //Hashtags also cause problems
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -76,4 +89,33 @@ public class PageViewModel extends AndroidViewModel {
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
     }
+
+    private void grabStatus() {
+        String get_url = getApplication().getResources().getString(R.string.statusScript)
+                +"?antID=" + antenna
+                + "&modName=" + module;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                    @Override
+                    public void onResponse(String response) {
+                        for (String s:response.split("###")) {
+                            if(s.contains(module)){
+                                mStatus.setValue(s.split("#")[1]);
+                            }
+                        }
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        // Add the request to the RequestQueue.
+        RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
+
+    }
+
 }

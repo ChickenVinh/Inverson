@@ -12,7 +12,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         useLibrary 'org.apache.http.legacy'
-
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {

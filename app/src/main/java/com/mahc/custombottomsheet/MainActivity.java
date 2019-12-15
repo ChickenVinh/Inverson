@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
@@ -89,7 +90,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     View bottomSheet;
     BottomSheetBehavior behavior;
     ProgressDialog progressDialog;
-
+    TextView txtStat1;
+    TextView txtStat2;
+    TextView txtStat3;
     //IMG SERVER STUFF
     String ServerURL = "http://gastroconsultung-catering.com/getData.php";
     String ImageNameFieldOnServer = "image_name" ;
@@ -269,6 +272,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         TextView Title = findViewById(R.id.bottom_sheet_title);
         TextView Address = findViewById(R.id.bottom_sheet_address);
         TextView extTitle = findViewById(R.id.bottom_sheet_ext_title);
+        txtStat1 = findViewById(R.id.statusText1);
+        txtStat2 = findViewById(R.id.statusText2);
+        txtStat3 = findViewById(R.id.statusText3);
+        grabStatus(getResources().getString(R.string.Object1));
+        grabStatus(getResources().getString(R.string.Object2));
+        grabStatus(getResources().getString(R.string.Object3));
+
+
         /*
         final Spinner spin1 = findViewById(R.id.spinner1);
         spin1.setEnabled(false);
@@ -287,30 +298,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         final ImageButton obj3_pic = findViewById(R.id.obj3_pic);
         obj3_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
 
-
-        String get_url = getResources().getString(R.string.module_script_URL) + "?antenna_ID=\"" + item.getTitle() + "\"";
+//http://gastroconsultung-catering.com/set_picture.php?action=get&antID=20LSN1002&module=Object-1
+        String get_url = getResources().getString(R.string.picture_script) + "?action=get&antID=" + item.getTitle();
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        String[] res = response.split("#####");
+                        String[] pathes = response.trim().split("###");//Split the pathes
                         if(!response.equals("")) {
-                            for (String s : res) {
-                                String module = s.split("###")[0];
-                                String imgpath = getResources().getString(R.string.server_url) + s.split("###")[1];
-                                if(!imgpath.equals(getResources().getString(R.string.server_url))) {
-                                    if (module.equals(obj1_pic.getTag().toString()) & !imgpath.equals(getResources().getString(R.string.server_url))) {
-                                        Picasso.with(obj1_pic.getContext()).load(imgpath).into(obj1_pic);
+                            for (String path : pathes) {
+                                if(!path.isEmpty()) {
+                                    String fullpath = getResources().getString(R.string.server_url) + path;
+                                    if (path.contains(obj1_pic.getTag().toString())) {
+                                        Picasso.with(obj1_pic.getContext()).load(fullpath).into(obj1_pic);
                                         //spin1.setSelection(Integer.parseInt(s.split("###")[2]));
                                         //spin1.setEnabled(true);
                                     }
-                                    if (module.equals(obj2_pic.getTag().toString()) && !imgpath.equals(getResources().getString(R.string.server_url))) {
-                                        Picasso.with(obj2_pic.getContext()).load(imgpath).into(obj2_pic);
+                                    if (path.contains(obj2_pic.getTag().toString())) {
+                                        Picasso.with(obj2_pic.getContext()).load(fullpath).into(obj2_pic);
                                         //spin2.setSelection(Integer.parseInt(s.split("###")[2]));
                                         //spin2.setEnabled(true);
                                     }
-                                    if (module.equals(obj3_pic.getTag().toString()) && !imgpath.equals(getResources().getString(R.string.server_url))) {
-                                        Picasso.with(obj3_pic.getContext()).load(imgpath).into(obj3_pic);
+                                    if (path.contains(obj3_pic.getTag().toString())) {
+                                        Picasso.with(obj3_pic.getContext()).load(fullpath).into(obj3_pic);
                                         //spin3.setSelection(Integer.parseInt(s.split("###")[2]));
                                         //spin3.setEnabled(true);
                                     }
@@ -457,27 +467,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
     }
     //
-    private void httpGETupdate(String antenna_ID, String modul, String user, String status){
-        String get_url = getResources().getString(R.string.server_url) + "upload.php?status=\"" + status
-                                                                        + "\"&antenna_ID=\"" + antenna_ID
-                                                                        + "\"&module=\"" + modul
-                                                                        + "\"&user=\"" + user
-                                                                        + "\"";
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this,"NetworkCall Error: " + error.getMessage(),Toast.LENGTH_LONG).show();
-            }
-        });
-        // Add the request to the RequestQueue.
-        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
-    }
+
     //FILL ANTENNASPINNER
     public void fillAntennaSpinner() {
 
@@ -616,6 +606,70 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //KEYBOARD HIDE
     public void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+    }
+    public void colorizeStatusText(String moduleid, int status){
+        if(moduleid.contains(getResources().getString(R.string.Object1))){
+            if(status==0){
+                txtStat1.setText("Everything is OK");
+                txtStat1.setTextColor(Color.GREEN);
+            }
+            if(status==1){
+                txtStat1.setText("Checkup needed!");
+                txtStat1.setTextColor(Color.YELLOW);
+            }
+            if(status==2){
+                txtStat1.setText("Service required!");
+                txtStat1.setTextColor(Color.RED);
+            }
+        }else if(moduleid.contains(getResources().getString(R.string.Object2))){
+            if(status==0){
+                txtStat2.setText("Everything is OK");
+                txtStat2.setTextColor(Color.GREEN);
+            }
+            if(status==1){
+                txtStat2.setText("Checkup needed!");
+                txtStat2.setTextColor(Color.YELLOW);
+            }
+            if(status==2){
+                txtStat2.setText("Service required!");
+                txtStat2.setTextColor(Color.RED);
+            }
+        }else if(moduleid.contains(getResources().getString(R.string.Object3))){
+            if(status==0){
+                txtStat3.setText("Everything is OK");
+                txtStat3.setTextColor(Color.GREEN);
+            }
+            if(status==1){
+                txtStat3.setText("Checkup needed!");
+                txtStat3.setTextColor(Color.YELLOW);
+            }
+            if(status==2){
+                txtStat3.setText("Service required!");
+                txtStat3.setTextColor(Color.RED);
+            }
+        }
+    }
+    private void grabStatus(String module) {
+        String get_url = getApplication().getResources().getString(R.string.statusScript)
+                +"?antID=" + selectedAntenna.getTitle();
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                new Response.Listener<String>() {
+                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                    @Override
+                    public void onResponse(String response) {
+                        for (String s:response.split("###")) {
+                            colorizeStatusText(s.split("#")[0],Integer.parseInt(s.split("#")[1]));
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        // Add the request to the RequestQueue.
+        RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
+
     }
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {
