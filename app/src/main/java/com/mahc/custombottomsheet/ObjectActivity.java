@@ -68,6 +68,8 @@ public class ObjectActivity extends AppCompatActivity {
         ticketID = UUID.randomUUID().toString().replaceAll("-","").substring(0,10);
         TextView txtID = findViewById(R.id.txtAntID);
         txtID.setText(getAntennaID());
+        TextView txtTickID = findViewById(R.id.txtTickID);
+        txtTickID.setText(ticketID);
         openTicket();
         //GET SELECTED TAB
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -133,6 +135,8 @@ public class ObjectActivity extends AppCompatActivity {
                                         case DialogInterface.BUTTON_POSITIVE:
                                             ticketID=response.split(":")[1];
                                             Toast.makeText(getBaseContext(),"Editing Ticket: " + ticketID,Toast.LENGTH_LONG).show();
+                                            TextView txtTickID = findViewById(R.id.txtTickID);
+                                            txtTickID.setText(ticketID);
                                             break;
 
                                         case DialogInterface.BUTTON_NEGATIVE:
@@ -160,5 +164,46 @@ public class ObjectActivity extends AppCompatActivity {
     }
 
     public void closeTicket(View view) {
+        DialogInterface.OnClickListener closingTicketdialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        String get_url = getResources().getString(R.string.openclose_ticket)
+                                +"?ticketID="   +getTicketID()
+                                +"&user="       +getUser()
+                                +"&action="     +"close";
+                        StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
+                                new Response.Listener<String>() {
+                                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+                                    @Override
+                                    public void onResponse(final String response) {
+                                        Toast.makeText(getBaseContext(),response,Toast.LENGTH_LONG).show();
+                                    }
+                                }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Toast.makeText(getBaseContext(),"Ticket closing Failed:" + error.getMessage(),Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                        // Add the request to the RequestQueue.
+                        RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+
+                        break;
+                }
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(ObjectActivity.this);
+        builder.setMessage("Do you really want to close this ticket?").setPositiveButton("Yes", closingTicketdialogClickListener)
+                .setNegativeButton("No", closingTicketdialogClickListener).show();
+    }
+
+    public void onBackPressed(){
+        super.onBackPressed();
+        finish();
     }
 }

@@ -171,6 +171,7 @@ public class LoginActivity extends AppCompatActivity {
                             Intent suc = new Intent(LoginActivity.this, MainActivity.class);
                             suc.putExtra("User", mEmailView.getText().toString());
                             startActivity(suc);
+                            finish();//this one prevents u from going back to login screen
                         }else if(response.equals("0")){//login failed
                             mPasswordView.setError(getString(R.string.error_incorrect_password));
                             mPasswordView.requestFocus();

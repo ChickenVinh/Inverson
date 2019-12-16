@@ -338,43 +338,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
 
-        /*SPINNER LISTENER
-        spin1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id){
-                httpGETupdate(selectedAntenna.getTitle(), spin1.getTag().toString(), user, Integer.toString(pos));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent){
-                //Another interface callback
-            }
-
-        });
-
-        spin2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
-                httpGETupdate(selectedAntenna.getTitle(), spin2.getTag().toString(), user, Integer.toString(pos));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-        spin3.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
-                httpGETupdate(selectedAntenna.getTitle(), spin3.getTag().toString(), user, Integer.toString(pos));
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-         */
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
@@ -657,8 +620,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
-                        for (String s:response.split("###")) {
-                            colorizeStatusText(s.split("#")[0],Integer.parseInt(s.split("#")[1]));
+                        if(!response.trim().isEmpty()) {
+                            for (String s : response.split("###")) {
+                                colorizeStatusText(s.split("#")[0], Integer.parseInt(s.split("#")[1]));
+                            }
                         }
                     }
                 }, new Response.ErrorListener() {
