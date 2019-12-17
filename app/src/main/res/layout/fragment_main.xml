@@ -52,7 +52,7 @@
     <EditText
         android:id="@+id/commentView"
         android:layout_width="match_parent"
-        android:layout_height="166dp"
+        android:layout_height="140dp"
         android:ems="10"
         android:enabled="false"
         android:gravity="start|top"

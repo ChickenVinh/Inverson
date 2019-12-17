@@ -179,6 +179,7 @@ public class ObjectActivity extends AppCompatActivity {
                                     @Override
                                     public void onResponse(final String response) {
                                         Toast.makeText(getBaseContext(),response,Toast.LENGTH_LONG).show();
+                                        finish();
                                     }
                                 }, new Response.ErrorListener() {
                             @Override
@@ -200,6 +201,9 @@ public class ObjectActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(ObjectActivity.this);
         builder.setMessage("Do you really want to close this ticket?").setPositiveButton("Yes", closingTicketdialogClickListener)
                 .setNegativeButton("No", closingTicketdialogClickListener).show();
+
+
+
     }
 
     public void onBackPressed(){
