@@ -37,6 +37,10 @@ import com.squareup.picasso.Picasso;
 import com.stfalcon.imageviewer.StfalconImageViewer;
 import com.stfalcon.imageviewer.loader.ImageLoader;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,6 +128,7 @@ public class PlaceholderFragment extends Fragment {
         //Get the Photos taken here
         return root;
     }
+
     private void setCommentObserver(){
         pageViewModel.getComments().observe(this, new Observer<String>() {
             @Override
@@ -143,8 +148,8 @@ public class PlaceholderFragment extends Fragment {
                 if(s.isEmpty()){
                     spinStatus.setSelection(0,false);
                 }else{
-                    int pos = Integer.parseInt(s.replaceAll(" ",""));
-                    spinStatus.setSelection(pos,false);
+                    //int pos = Integer.parseInt(s.replaceAll(" ",""));
+                    spinStatus.setSelection(Integer.parseInt(s),false);
                 }
                 spinStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
@@ -180,14 +185,18 @@ public class PlaceholderFragment extends Fragment {
         RequestQueueSingleton.getInstance(getContext()).addToRequestQueue(stringRequest);
     }
     private void parseResultAndShowPics(String response) {
-        String[] pathes = response.trim().split("###");//Split the pathes
-        if(!response.equals("")) {
-            for (String path : pathes) {
-                if(!path.isEmpty() && path.contains(obj[index-1])) {
-                    String fullpath = getResources().getString(R.string.server_url) + path;
+        try {
+            JSONArray jArray = new JSONArray(response);
+            for (int i=0; i < jArray.length(); i++)
+            {
+                JSONObject tmpObj = jArray.getJSONObject(i);
+                if(tmpObj.getString("path").contains(module)){
+                    String fullpath = getResources().getString(R.string.server_url) + tmpObj.getString("path");
                     imgPathes.add(fullpath);
                 }
             }
+        }catch (JSONException ex){
+            ex.printStackTrace();
         }
 
         for (int i = 0; i < imgPathes.size(); i++) {

@@ -18,6 +18,10 @@ import com.android.volley.toolbox.StringRequest;
 import com.mahc.custombottomsheet.R;
 import com.mahc.custombottomsheet.RequestQueueSingleton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class PageViewModel extends AndroidViewModel {
 
     private MutableLiveData<Integer> mIndex = new MutableLiveData<>();
@@ -92,17 +96,25 @@ public class PageViewModel extends AndroidViewModel {
 
     private void grabStatus() {
         String get_url = getApplication().getResources().getString(R.string.statusScript)
-                +"?antID=" + antenna
-                + "&modName=" + module;
+                +"?antID=" + antenna;
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
-                        for (String s:response.split("###")) {
-                            if(s.contains(module)){
-                                mStatus.setValue(s.split("#")[1]);
+                        try {
+                            JSONArray jArray = new JSONArray(response);
+
+                            for (int i=0; i < jArray.length(); i++)
+                            {
+                                JSONObject tmpObj = jArray.getJSONObject(i);
+                                if(tmpObj.getString("module_id").contains(module)){
+                                    int status = tmpObj.getInt("status");
+                                    mStatus.setValue(Integer.toString(status));
+                                }
                             }
+                        }catch (JSONException ex){
+                            ex.printStackTrace();
                         }
 
 

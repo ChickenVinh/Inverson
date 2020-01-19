@@ -56,6 +56,10 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -279,19 +283,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         grabStatus(getResources().getString(R.string.Object1));
         grabStatus(getResources().getString(R.string.Object2));
         grabStatus(getResources().getString(R.string.Object3));
+        grabLatestPictures();
 
 
-        /*
-        final Spinner spin1 = findViewById(R.id.spinner1);
-        spin1.setEnabled(false);
-        spin1.setSelection(0);
-        final Spinner spin2 = findViewById(R.id.spinner2);
-        spin2.setEnabled(false);
-        spin2.setSelection(0);
-        final Spinner spin3 = findViewById(R.id.spinner3);
-        spin3.setEnabled(false);
-        spin3.setSelection(0);
-        */
+
+        Pic.setImageDrawable(roundedPic);
+        extTitle.setText(item.getExtTitle());
+        Title.setText(item.getTitle());
+        Address.setText(item.getAddress());
+    }
+    private void grabLatestPictures(){
         final ImageButton obj1_pic = findViewById(R.id.obj1_pic);
         obj1_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
         final ImageButton obj2_pic = findViewById(R.id.obj2_pic);
@@ -299,35 +300,38 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         final ImageButton obj3_pic = findViewById(R.id.obj3_pic);
         obj3_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
 
-//http://gastroconsultung-catering.com/set_picture.php?action=get&antID=20LSN1002&module=Object-1
-        String get_url = getResources().getString(R.string.picture_script) + "?action=get&antID=" + item.getTitle();
+        //http://gastroconsultung-catering.com/set_picture.php?action=get&antID=20LSN1002&module=Object-1
+        String get_url = getResources().getString(R.string.picture_script) + "?action=get&antID=" + selectedAntenna.getTitle();
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        String[] pathes = response.trim().split("###");//Split the pathes
-                        if(!response.equals("")) {
-                            for (String path : pathes) {
-                                if(!path.isEmpty()) {
-                                    String fullpath = getResources().getString(R.string.server_url) + path;
-                                    if (path.contains(obj1_pic.getTag().toString())) {
-                                        Picasso.with(obj1_pic.getContext()).load(fullpath).into(obj1_pic);
-                                        //spin1.setSelection(Integer.parseInt(s.split("###")[2]));
-                                        //spin1.setEnabled(true);
-                                    }
-                                    if (path.contains(obj2_pic.getTag().toString())) {
-                                        Picasso.with(obj2_pic.getContext()).load(fullpath).into(obj2_pic);
-                                        //spin2.setSelection(Integer.parseInt(s.split("###")[2]));
-                                        //spin2.setEnabled(true);
-                                    }
-                                    if (path.contains(obj3_pic.getTag().toString())) {
-                                        Picasso.with(obj3_pic.getContext()).load(fullpath).into(obj3_pic);
-                                        //spin3.setSelection(Integer.parseInt(s.split("###")[2]));
-                                        //spin3.setEnabled(true);
-                                    }
+                        try {
+                            JSONArray jArray = new JSONArray(response);
+                            for (int i=0; i < jArray.length(); i++)
+                            {
+                                JSONObject tmpObj = jArray.getJSONObject(i);
+                                String fullpath = getResources().getString(R.string.server_url) + tmpObj.getString("path");
+                                if (fullpath.contains(obj1_pic.getTag().toString())) {
+                                    Picasso.with(obj1_pic.getContext()).load(fullpath).into(obj1_pic);
+                                    //spin1.setSelection(Integer.parseInt(s.split("###")[2]));
+                                    //spin1.setEnabled(true);
+                                }
+                                if (fullpath.contains(obj2_pic.getTag().toString())) {
+                                    Picasso.with(obj2_pic.getContext()).load(fullpath).into(obj2_pic);
+                                    //spin2.setSelection(Integer.parseInt(s.split("###")[2]));
+                                    //spin2.setEnabled(true);
+                                }
+                                if (fullpath.contains(obj3_pic.getTag().toString())) {
+                                    Picasso.with(obj3_pic.getContext()).load(fullpath).into(obj3_pic);
+                                    //spin3.setSelection(Integer.parseInt(s.split("###")[2]));
+                                    //spin3.setEnabled(true);
                                 }
                             }
+                        }catch (JSONException ex){
+                            ex.printStackTrace();
                         }
+
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -339,10 +343,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
 
-        Pic.setImageDrawable(roundedPic);
-        extTitle.setText(item.getExtTitle());
-        Title.setText(item.getTitle());
-        Address.setText(item.getAddress());
     }
     //DOWNLOAD N PARSE ANTENNA DATA
     private void downloadCSV(){
@@ -394,30 +394,54 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
-                        //String convtmp = "";
-                        //convtmp = new String(response.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-                        ArrayList<String>  lstAntennas = new ArrayList<String>(Arrays.asList(response.split("###")));
-                        ArrayList<Antenna> tmp_antColl = new ArrayList<>();
-                        if(!lstAntennas.isEmpty()){
-                            for (String s:lstAntennas) {
-                                String[] lineArr = s.split("#");
-                                String ID = lineArr[0];
-                                String extID = lineArr[1];
-                                String region = lineArr[2];
-                                String province = lineArr[3];
-                                String Address = lineArr[4];
-                                String klat = lineArr[6];
-                                String klong = lineArr[5];
-
-                                //Create Antenna and add to Collection
-                                Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address, extID, region, province);
-                                tmp_antColl.add(tmp_ant);
-
+                        if(!response.isEmpty()){
+                            try {
+                                ArrayList<Antenna> tmp_antColl = new ArrayList<>();
+                                JSONArray jArray = new JSONArray(response);
+                                for (int i=0; i < jArray.length(); i++)
+                                {
+                                    JSONObject tmpObj = jArray.getJSONObject(i);
+                                    String ID = tmpObj.getString("AntennaID");
+                                    String extID = tmpObj.getString("Company_site_name");
+                                    String region = tmpObj.getString("Region");
+                                    String province = tmpObj.getString("Province");
+                                    String Address = tmpObj.getString("Site_locate_Address");
+                                    Double klat = tmpObj.getDouble("Lat");
+                                    Double klong = tmpObj.getDouble("Long");
+                                    //Create Antenna and add to Collection
+                                    Antenna tmp_ant = new Antenna(klat, klong, ID, Address, extID, region, province);
+                                    tmp_antColl.add(tmp_ant);
+                                }
+                                addAntennasToCollection(tmp_antColl);
+                            }catch (JSONException ex){
+                                ex.printStackTrace();
                             }
-                            addAntennasToCollection(tmp_antColl);
+
+                            /* OLD STRING APPROACH
+                            ArrayList<String>  lstAntennas = new ArrayList<String>(Arrays.asList(response.split("###")));
+
+                                for (String s:lstAntennas) {
+                                    String[] lineArr = s.split("#");
+                                    String ID = lineArr[0];
+                                    String extID = lineArr[1];
+                                    String region = lineArr[2];
+                                    String province = lineArr[3];
+                                    String Address = lineArr[4];
+                                    String klat = lineArr[6];
+                                    String klong = lineArr[5];
+
+                                    //Create Antenna and add to Collection
+                                    Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address, extID, region, province);
+                                    tmp_antColl.add(tmp_ant);
+
+                                }
+                                addAntennasToCollection(tmp_antColl);
+                            */
                         }else{
                             Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
                         }
+
+
                         progressDialog.dismiss();
                     }
                 }, new Response.ErrorListener() {
@@ -622,8 +646,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(String response) {
                         if(!response.trim().isEmpty()) {
-                            for (String s : response.split("###")) {
-                                colorizeStatusText(s.split("#")[0], Integer.parseInt(s.split("#")[1]));
+                            try {
+                                JSONArray jArray = new JSONArray(response);
+                                for (int i=0; i < jArray.length(); i++)
+                                {
+                                    JSONObject tmpObj = jArray.getJSONObject(i);
+                                    int status = tmpObj.getInt("status");
+                                    String module_id = tmpObj.getString("module_id");
+                                    //fillandColorize status text
+                                    colorizeStatusText(module_id,status);
+                                }
+                            }catch (JSONException ex){
+                                ex.printStackTrace();
                             }
                         }
                     }
