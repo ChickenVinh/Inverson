@@ -310,6 +310,7 @@ public class PlaceholderFragment extends Fragment {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                error.getMessage();
             }
         });
         // Add the request to the RequestQueue.

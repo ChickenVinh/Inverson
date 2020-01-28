@@ -29,15 +29,15 @@
     <string name="cross_placeholder">__HASHTAG__</string>
 
     <string name="server_url">http://gastroconsultung-catering.com/</string>
-    <string name="server_login_url">http://gastroconsultung-catering.com/testing/vinh/login.php</string>
-    <string name="upload_script">http://gastroconsultung-catering.com/upload.php</string>
-    <string name="comment_script">http://gastroconsultung-catering.com/comment.php</string>
-    <string name="module_script_URL">http://gastroconsultung-catering.com/getLatest.php</string>
-    <string name="statusScript">http://gastroconsultung-catering.com/set_status.php</string>
+    <string name="server_login_url">http://gastroconsultung-catering.com/scripts/login.php</string>
+    <string name="upload_script">http://gastroconsultung-catering.com/scripts/upload.php</string>
+    <string name="comment_script">http://gastroconsultung-catering.com/scripts/comment.php</string>
+    <string name="module_script_URL">http://gastroconsultung-catering.com/scripts/getLatest.php</string>
+    <string name="statusScript">http://gastroconsultung-catering.com/scripts/set_status.php</string>
     <string name="URL_antennasCSV">http://gastroconsultung-catering.com/infos.csv</string>
-    <string name="URL_antennas">http://gastroconsultung-catering.com/getAllAntennas.php</string>
-    <string name="openclose_ticket">http://gastroconsultung-catering.com/ticket.php</string>
-    <string name="picture_script">http://gastroconsultung-catering.com/set_picture.php</string>
+    <string name="URL_antennas">http://gastroconsultung-catering.com/scripts/getAllAntennas.php</string>
+    <string name="openclose_ticket">http://gastroconsultung-catering.com/scripts/ticket.php</string>
+    <string name="picture_script">http://gastroconsultung-catering.com/scripts/set_picture.php</string>
 
 
     <string-array name="status_array">

@@ -27,16 +27,20 @@
             android:layout_marginTop="0dp"
             android:layout_marginEnd="10dp"
             android:layout_toStartOf="@+id/bottom_sheet_pic"
+            android:layout_toLeftOf="@id/layAntennaInfo"
             android:background="@color/transparent"
             android:onClick="getDirectionsTo"
             android:scaleType="fitCenter"
             android:src="@android:drawable/ic_menu_directions" />
 
         <LinearLayout
-            android:layout_width="260dp"
-            android:layout_height="91dp"
+            android:id="@+id/layAntennaInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:layout_marginStart="0dp"
+            android:layout_toLeftOf="@id/bottom_sheet_pic"
             android:orientation="vertical">
 
             <TextView
@@ -77,132 +81,27 @@
             android:layout_marginEnd="0dp"
             android:layout_marginRight="0dp"
             android:layout_marginBottom="0dp"
+            android:alpha="0.5"
             app:srcCompat="@color/common_google_signin_btn_text_dark_disabled" />
 
     </RelativeLayout>
 
 
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/vLayStatusPreview"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="wrap_content"
+        android:divider="?android:dividerHorizontal"
+        android:orientation="vertical"
+        android:showDividers="middle"/>
+
+    <RelativeLayout
+        android:id="@+id/layoutModulePreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:background="@drawable/border_bottom">
 
-        <LinearLayout
-            android:layout_width="80dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"></LinearLayout>
-
-        <ImageButton
-            android:id="@+id/obj1_pic"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="16dp"
-            android:background="@color/transparent"
-            android:onClick="startObjectActivity"
-            android:scaleType="fitCenter"
-            android:src="@drawable/dummy2"
-            android:tag="@string/Object1" />
-
-
-        <ImageButton
-            android:id="@+id/obj2_pic"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_below="@+id/obj1_pic"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="9dp"
-            android:layout_marginTop="21dp"
-            android:layout_marginEnd="16dp"
-            android:background="@color/transparent"
-            android:onClick="startObjectActivity"
-            android:scaleType="fitCenter"
-            android:src="@drawable/dummy2"
-            android:tag="@string/Object2" />
-
-        <ImageButton
-            android:id="@+id/obj3_pic"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_below="@+id/obj2_pic"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="21dp"
-            android:layout_marginEnd="16dp"
-            android:background="@color/transparent"
-            android:onClick="startObjectActivity"
-            android:scaleType="fitCenter"
-            android:src="@drawable/dummy2"
-            android:tag="@string/Object3" />
-
-        <LinearLayout
-            android:layout_width="332dp"
-            android:layout_height="match_parent"
-            android:layout_toEndOf="@+id/obj1_pic"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_obj1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:text="@string/Object1" />
-
-                <TextView
-                    android:id="@+id/statusText1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Module operating correctly"
-                    android:textColor="@color/design_default_color_secondary_variant" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_obj"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:text="@string/Object2" />
-
-                <TextView
-                    android:id="@+id/statusText2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Module operating correctly"
-                    android:textColor="@color/design_default_color_secondary_variant" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/label_obj3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:text="@string/Object3" />
-
-                <TextView
-                    android:id="@+id/statusText3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Module operating correctly"
-                    android:textColor="@color/design_default_color_secondary_variant" />
-            </LinearLayout>
-
-        </LinearLayout>
 
     </RelativeLayout>
 

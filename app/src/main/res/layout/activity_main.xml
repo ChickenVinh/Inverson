@@ -11,7 +11,6 @@
 
 
         <fragment
-            xmlns:map="http://schemas.android.com/apk/res-auto"
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
@@ -38,49 +37,50 @@
                 android:fitsSystemWindows="true"/>
         </androidx.core.widget.NestedScrollView>
 
-        <RelativeLayout
-            android:id="@+id/Searchbar"
-            android:layout_width="match_parent"
+    <RelativeLayout
+        android:id="@+id/Searchbar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:alpha="0.7"
+        android:background="@color/common_google_signin_btn_text_dark_default"
+        android:elevation="10dp">
+
+        <ImageButton
+            android:id="@+id/ic_magnify"
+            android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"
-            android:background="@color/common_google_signin_btn_text_dark_default"
-            android:elevation="10dp">
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
+            android:background="@color/transparent"
+            app:srcCompat="@drawable/ic_magnify" />
 
-            <ImageButton
-                android:id="@+id/ic_magnify"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="10dp"
-                android:background="@color/transparent"
-                android:src="@drawable/ic_magnify" />
+        <EditText
+            android:id="@+id/txt_search"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="3dp"
+            android:layout_toEndOf="@+id/ic_magnify"
+            android:background="@null"
+            android:ems="10"
+            android:hint="@string/searchbar_hint"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLines="1"
+            android:textColor="#000"
+            android:textSize="15sp" />
 
-            <EditText
-                android:id="@+id/txt_search"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="3dp"
-                android:layout_toEndOf="@+id/ic_magnify"
-                android:background="@null"
-                android:ems="10"
-                android:hint="@string/searchbar_hint"
-                android:imeOptions="actionDone"
-                android:inputType="text"
-                android:maxLines="1"
-                android:textColor="#000"
-                android:textSize="15sp" />
-
-            <Spinner
-                android:id="@+id/spinner_antennas"
-                android:layout_width="50dp"
-                android:layout_height="match_parent"
-                android:layout_alignEnd="@+id/txt_search"
-                android:layout_marginEnd="4dp"
-                android:spinnerMode="dialog" />
-        </RelativeLayout>
+        <Spinner
+            android:id="@+id/spinner_antennas"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:layout_alignEnd="@+id/txt_search"
+            android:layout_marginEnd="4dp"
+            android:spinnerMode="dialog" />
+    </RelativeLayout>
 
         <!--
             <com.google.android.material.floatingactionbutton.FloatingActionButton

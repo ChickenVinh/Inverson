@@ -8,20 +8,20 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
+import android.os.Handler;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -39,8 +39,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -49,8 +47,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
@@ -83,20 +79,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int MY_CAMERA_REQUEST_CODE = 100;
 
     private GoogleMap mMap;
+    private View mapView;
     private Context context = this;
     private ClusterManager<Antenna> mClusterManager;
     private ArrayList<Antenna> mAntennaCollection = new ArrayList<>();
     private String user;
     private Antenna selectedAntenna = null;
     private String obj;
-    private int objnr;
+    private int counter = 0;
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehavior behavior;
     ProgressDialog progressDialog;
-    TextView txtStat1;
-    TextView txtStat2;
-    TextView txtStat3;
     //IMG SERVER STUFF
     String ServerURL = "http://gastroconsultung-catering.com/getData.php";
     String ImageNameFieldOnServer = "image_name" ;
@@ -104,6 +98,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     boolean check = true;
     private String currentPhotoPath;
     private int page = 0;
+
+    String statusResponse = "";
+    String pictureResponse = "";
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -122,7 +119,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
-
+        mapView = mapFragment.getView();
         //Download Antennas
         //downloadCSV();
         getAndParseAntennas();
@@ -205,7 +202,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
             }
         });
-
+        mMap.setMyLocationEnabled(true);
+        if (mapView != null &&
+                mapView.findViewById(Integer.parseInt("1")) != null) {
+            // Get the button view
+            View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+            // and next place it, on bottom right (as Google Maps app)
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
+                    locationButton.getLayoutParams();
+            // position on right bottom
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
+            layoutParams.setMargins(0, 120, 0, 0);
+        }
         final CustomClusterRenderer renderer = new CustomClusterRenderer(this, mMap, mClusterManager);
 
         mClusterManager.setRenderer(renderer);
@@ -273,32 +282,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         final float roundPx = (float) bitmap.getWidth() * 0.06f;
         roundedPic.setCornerRadius(roundPx);
 
+        counter=0;
+        statusResponse = "";
+        pictureResponse = "";
+        grabStatuses();
+        grabLatestPictures();
+
         ImageView Pic = findViewById(R.id.bottom_sheet_pic);
         TextView Title = findViewById(R.id.bottom_sheet_title);
         TextView Address = findViewById(R.id.bottom_sheet_address);
         TextView extTitle = findViewById(R.id.bottom_sheet_ext_title);
-        txtStat1 = findViewById(R.id.statusText1);
-        txtStat2 = findViewById(R.id.statusText2);
-        txtStat3 = findViewById(R.id.statusText3);
-        grabStatus(getResources().getString(R.string.Object1));
-        grabStatus(getResources().getString(R.string.Object2));
-        grabStatus(getResources().getString(R.string.Object3));
-        grabLatestPictures();
-
-
-
         Pic.setImageDrawable(roundedPic);
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
     }
     private void grabLatestPictures(){
-        final ImageButton obj1_pic = findViewById(R.id.obj1_pic);
-        obj1_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
-        final ImageButton obj2_pic = findViewById(R.id.obj2_pic);
-        obj2_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
-        final ImageButton obj3_pic = findViewById(R.id.obj3_pic);
-        obj3_pic.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_dummy1));
 
         //http://gastroconsultung-catering.com/set_picture.php?action=get&antID=20LSN1002&module=Object-1
         String get_url = getResources().getString(R.string.picture_script) + "?action=get&antID=" + selectedAntenna.getTitle();
@@ -306,12 +305,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        pictureResponse = response;
+                        if(!statusResponse.trim().isEmpty()) {
+                            buildPreview();
+                        }else{//wait a bit and do it
+                            final Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    buildPreview();
+                                }
+                            }, 500);  //the time is in miliseconds
+                        }
+                        /*
                         try {
                             JSONArray jArray = new JSONArray(response);
                             for (int i=0; i < jArray.length(); i++)
                             {
                                 JSONObject tmpObj = jArray.getJSONObject(i);
                                 String fullpath = getResources().getString(R.string.server_url) + tmpObj.getString("path");
+
                                 if (fullpath.contains(obj1_pic.getTag().toString())) {
                                     Picasso.with(obj1_pic.getContext()).load(fullpath).into(obj1_pic);
                                     //spin1.setSelection(Integer.parseInt(s.split("###")[2]));
@@ -331,14 +344,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         }catch (JSONException ex){
                             ex.printStackTrace();
                         }
-
+                        */
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(MainActivity.this,"NetworkCall Error: " + error.getMessage(),Toast.LENGTH_LONG).show();
             }
-        });
+        }){
+            @Override
+            public Priority getPriority() {
+                return Priority.LOW;
+            }
+        };
 
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
@@ -416,32 +434,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             }catch (JSONException ex){
                                 ex.printStackTrace();
                             }
-
-                            /* OLD STRING APPROACH
-                            ArrayList<String>  lstAntennas = new ArrayList<String>(Arrays.asList(response.split("###")));
-
-                                for (String s:lstAntennas) {
-                                    String[] lineArr = s.split("#");
-                                    String ID = lineArr[0];
-                                    String extID = lineArr[1];
-                                    String region = lineArr[2];
-                                    String province = lineArr[3];
-                                    String Address = lineArr[4];
-                                    String klat = lineArr[6];
-                                    String klong = lineArr[5];
-
-                                    //Create Antenna and add to Collection
-                                    Antenna tmp_ant = new Antenna(Double.parseDouble(klat), Double.parseDouble(klong), ID, Address, extID, region, province);
-                                    tmp_antColl.add(tmp_ant);
-
-                                }
-                                addAntennasToCollection(tmp_antColl);
-                            */
                         }else{
                             Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
                         }
-
-
                         progressDialog.dismiss();
                     }
                 }, new Response.ErrorListener() {
@@ -454,8 +449,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(stringRequest);
     }
-    //
-
     //FILL ANTENNASPINNER
     public void fillAntennaSpinner() {
 
@@ -527,19 +520,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     public void startObjectActivity(View view){
         Intent intent = new Intent(MainActivity.this, ObjectActivity.class);
-        //Pass Object number to get to right tab
-        switch (view.getId()) {
-            case R.id.obj1_pic:
-                page = 0;
-                break;
-            case R.id.obj2_pic:
-                page = 1;
-                break;
-            case R.id.obj3_pic:
-                page = 2;
-                break;
-        }
-        intent.putExtra("obj", page);
+
+        intent.putExtra("obj", 0);
         intent.putExtra("Antenna",selectedAntenna);
         intent.putExtra("user",user);
         startActivity(intent);
@@ -560,84 +542,113 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         currentPhotoPath = image.getAbsolutePath();
         return image;
     }
-    //MOVE TO OWN LOCATION
-    private void getAndMoveToDeviceLocation(){
-        Log.d("", "getDeviceLocation: getting the devices current location");
-
-        FusedLocationProviderClient mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
-        try{
-            if(EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_FINE_LOCATION)){
-
-                final Task location = mFusedLocationProviderClient.getLastLocation();
-                location.addOnCompleteListener(new OnCompleteListener() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
-                        if(task.isSuccessful() && task.getResult() != null) {
-                            Log.d("", "onComplete: found location!");
-                            Location currentLocation = (Location) task.getResult();
-
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM));
-                        }else{
-                            Log.d("", "current location is null");
-                            Toast.makeText(getBaseContext(), "Location not found", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }else{
-                requestLocationPermission();
-            }
-        }catch (SecurityException e){
-            Log.e("", "getDeviceLocation: SecurityException: " +e.getMessage());
-        }
-    }
     //KEYBOARD HIDE
     public void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
-    public void colorizeStatusText(String moduleid, int status){
-        if(moduleid.contains(getResources().getString(R.string.Object1))){
-            if(status==0){
-                txtStat1.setText("Everything is OK");
-                txtStat1.setTextColor(Color.GREEN);
+    public void buildPreview(){
+        if(!statusResponse.trim().isEmpty()){
+            //remove
+            LinearLayout prevList = findViewById(R.id.vLayStatusPreview);
+            prevList.removeAllViews();
+            //BUILD THE PREVIEW
+            try {
+                JSONArray jstatArray = new JSONArray(statusResponse);
+                JSONArray jpicArray = new JSONArray(pictureResponse);
+                int countObj = jstatArray.length();
+                for (int i=0; i < countObj; i++)
+                {
+                    //get all informations out of server responses
+                    JSONObject jstatObj = jstatArray.getJSONObject(i);
+                    JSONObject jpicObj = jpicArray.getJSONObject(i);
+                    int status = jstatObj.getInt("status");
+                    String module_id = jstatObj.getString("module_id");
+                    String fullpath = getResources().getString(R.string.server_url) + jpicObj.getString("path");
+
+                    if(status != 0) {
+                        //BUILD UP LAYOUT---------
+                        RelativeLayout layPrev = new RelativeLayout(this);
+                        //Pic
+                        ImageView pic = new ImageView(this);
+                        pic.setId(View.generateViewId());
+                        RelativeLayout.LayoutParams rlp = new RelativeLayout.LayoutParams(DPtoPX(80), DPtoPX(80));
+                        rlp.setMarginStart(DPtoPX(10));
+                        rlp.topMargin = DPtoPX(10);
+                        rlp.setMarginEnd(DPtoPX(16));
+                        pic.setLayoutParams(rlp);
+                        pic.setImageResource(R.drawable.ic_dummy1);
+                        Picasso.with(pic.getContext()).load(fullpath).into(pic);
+                        layPrev.addView(pic);
+
+                        //name-label
+                        TextView mname = new TextView(this);
+                        mname.setText(module_id);
+                        mname.setId(View.generateViewId());
+                        RelativeLayout.LayoutParams rlp2 = new RelativeLayout.LayoutParams(
+                                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        rlp2.addRule(RelativeLayout.RIGHT_OF, pic.getId());
+                        mname.setLayoutParams(rlp2);
+                        layPrev.addView(mname);
+                        //status-label
+                        TextView txtStat = new TextView(this);
+                        txtStat.setId(View.generateViewId());
+                        txtStat.setTextSize(24);
+                        txtStat.setAllCaps(true);
+                        RelativeLayout.LayoutParams rlp3 = new RelativeLayout.LayoutParams(
+                                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                                RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        rlp3.addRule(RelativeLayout.RIGHT_OF, pic.getId());
+                        rlp3.addRule(RelativeLayout.BELOW, mname.getId());
+                        txtStat.setLayoutParams(rlp3);
+                        if (status == 1) {
+                            txtStat.setText("Checkup needed!");
+                            txtStat.setTextColor(Color.YELLOW);
+                        }
+                        if (status == 2) {
+                            txtStat.setText("Service required!");
+                            txtStat.setTextColor(Color.RED);
+                        }
+                        layPrev.addView(txtStat);
+
+                        LinearLayout linlay = findViewById(R.id.vLayStatusPreview);
+                        linlay.addView(layPrev);
+                    }
+                }
+            }catch (Exception ex){
+                ex.printStackTrace();
             }
-            if(status==1){
-                txtStat1.setText("Checkup needed!");
-                txtStat1.setTextColor(Color.YELLOW);
-            }
-            if(status==2){
-                txtStat1.setText("Service required!");
-                txtStat1.setTextColor(Color.RED);
-            }
-        }else if(moduleid.contains(getResources().getString(R.string.Object2))){
-            if(status==0){
-                txtStat2.setText("Everything is OK");
-                txtStat2.setTextColor(Color.GREEN);
-            }
-            if(status==1){
-                txtStat2.setText("Checkup needed!");
-                txtStat2.setTextColor(Color.YELLOW);
-            }
-            if(status==2){
-                txtStat2.setText("Service required!");
-                txtStat2.setTextColor(Color.RED);
-            }
-        }else if(moduleid.contains(getResources().getString(R.string.Object3))){
-            if(status==0){
-                txtStat3.setText("Everything is OK");
-                txtStat3.setTextColor(Color.GREEN);
-            }
-            if(status==1){
-                txtStat3.setText("Checkup needed!");
-                txtStat3.setTextColor(Color.YELLOW);
-            }
-            if(status==2){
-                txtStat3.setText("Service required!");
-                txtStat3.setTextColor(Color.RED);
-            }
+        }else{
+            //WAIT 2s AND RETRY
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(++counter > 3) {
+                        buildPreview();
+                    }else{
+                        LinearLayout linL = findViewById(R.id.vLayStatusPreview);
+                        linL.removeAllViews();
+                        TextView txt = new TextView(getApplicationContext());
+                        txt.setText("No Data");
+                        txt.setTextSize(35);
+                        txt.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                        linL.addView(txt);
+                    }
+
+                }
+            }, 500);  //the time is in miliseconds
         }
     }
-    private void grabStatus(String module) {
+    private int DPtoPX(int dp){
+        int px = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                getResources().getDisplayMetrics());
+        return px;
+    }
+
+    private void grabStatuses() {
         String get_url = getApplication().getResources().getString(R.string.statusScript)
                 +"?antID=" + selectedAntenna.getTitle();
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
@@ -646,19 +657,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(String response) {
                         if(!response.trim().isEmpty()) {
+                            statusResponse = response.trim();
+                            /*
                             try {
                                 JSONArray jArray = new JSONArray(response);
-                                for (int i=0; i < jArray.length(); i++)
+                                int countObj = jArray.length();
+                                for (int i=0; i < countObj; i++)
                                 {
                                     JSONObject tmpObj = jArray.getJSONObject(i);
                                     int status = tmpObj.getInt("status");
                                     String module_id = tmpObj.getString("module_id");
                                     //fillandColorize status text
-                                    colorizeStatusText(module_id,status);
+                                    //drawStatusText(module_id,status);
                                 }
                             }catch (JSONException ex){
                                 ex.printStackTrace();
                             }
+                             */
                         }
                     }
                 }, new Response.ErrorListener() {
@@ -666,11 +681,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
             }
-        });
+        }){
+            @Override
+            public Priority getPriority() {
+                return Priority.HIGH;
+            }
+        };
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
-
     }
+
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {
 
