@@ -39,6 +39,14 @@
     <string name="openclose_ticket">http://gastroconsultung-catering.com/scripts/ticket.php</string>
     <string name="picture_script">http://gastroconsultung-catering.com/scripts/set_picture.php</string>
 
+    <string-array name="module_array">
+        <item>Object-1</item>
+        <item>Object-2</item>
+        <item>Object-3</item>
+        <item>Object-4</item>
+        <item>Object-5</item>
+        <item>Object-6</item>
+    </string-array>
 
     <string-array name="status_array">
         <item>Select status…</item>

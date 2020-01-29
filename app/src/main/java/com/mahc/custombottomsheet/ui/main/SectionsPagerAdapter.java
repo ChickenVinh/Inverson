@@ -18,11 +18,14 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
     private static final int[] TAB_TITLES = new int[]{R.string.tab_text_1, R.string.tab_text_2, R.string.tab_text_3};
+    private String[] TAB_TITLES2;
+
     private final Context mContext;
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
         mContext = context;
+        TAB_TITLES2 = mContext.getResources().getStringArray(R.array.module_array);
     }
 
     @Override
@@ -35,12 +38,12 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     @Nullable
     @Override
     public CharSequence getPageTitle(int position) {
-        return mContext.getResources().getString(TAB_TITLES[position]);
+        //return mContext.getResources().getString(TAB_TITLES[position]);
+        return TAB_TITLES2[position];
     }
 
     @Override
     public int getCount() {
-        // Show 2 total pages.
-        return 3;
+        return 1;
     }
 }

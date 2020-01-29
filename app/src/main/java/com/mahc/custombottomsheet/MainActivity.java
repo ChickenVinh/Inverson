@@ -128,67 +128,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         requestCameraPermission();
         requestLocationPermission();
 
-        CoordinatorLayout coordinatorLayout = findViewById(R.id.coordinatorlayout);
-        bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
-        behavior = BottomSheetBehavior.from(bottomSheet);
-        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        final RelativeLayout searchbar = coordinatorLayout.findViewById(R.id.Searchbar);
-        behavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
-                        searchbar.setVisibility(View.VISIBLE);
-                        break;
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        break;
-                    case BottomSheetBehavior.STATE_EXPANDED: {
-                        searchbar.setVisibility(View.GONE);
-                    }
-                    break;
-                    case BottomSheetBehavior.STATE_COLLAPSED: {
-                        searchbar.setVisibility(View.VISIBLE);
-                    }
-                    break;
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        break;
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        searchbar.setVisibility(View.VISIBLE);
-                        break;
-                }
-            }
+        //setting up some Views
+        setupBottomSheet();
+        setupSearchBox();
 
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
 
-            }
-        });
-        bottomSheetTextView = bottomSheet.findViewById(R.id.bottom_sheet_title);
-        //ItemPagerAdapter adapter = new ItemPagerAdapter(this,mDrawables);
-        //ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        //viewPager.setAdapter(adapter);
-
-        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        //behavior.setCollapsible(false);
-
-        final TextView searchTextView = findViewById(R.id.txt_search);
-
-        searchTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-                    if(!searchMarker(textView.getText().toString())){
-                        Toast.makeText(getApplicationContext(), getString(R.string.error_antenna_not_found), Toast.LENGTH_SHORT).show();
-                    }
-                    hideSoftKeyboard();
-                    return true;
-                }
-                return false;
-            }
-        });
 
     }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -266,6 +212,67 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
         return false;
+    }
+    private void setupSearchBox(){
+        final TextView searchTextView = findViewById(R.id.txt_search);
+
+        searchTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
+                    if(!searchMarker(textView.getText().toString())){
+                        Toast.makeText(getApplicationContext(), getString(R.string.error_antenna_not_found), Toast.LENGTH_SHORT).show();
+                    }
+                    hideSoftKeyboard();
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+    private void setupBottomSheet(){
+        CoordinatorLayout coordinatorLayout = findViewById(R.id.coordinatorlayout);
+        bottomSheet = coordinatorLayout.findViewById(R.id.bottom_sheet);
+        behavior = BottomSheetBehavior.from(bottomSheet);
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        final RelativeLayout searchbar = coordinatorLayout.findViewById(R.id.Searchbar);
+        behavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                switch (newState) {
+                    case BottomSheetBehavior.STATE_HALF_EXPANDED:
+                        searchbar.setVisibility(View.VISIBLE);
+                        break;
+                    case BottomSheetBehavior.STATE_HIDDEN:
+                        break;
+                    case BottomSheetBehavior.STATE_EXPANDED: {
+                        searchbar.setVisibility(View.GONE);
+                    }
+                    break;
+                    case BottomSheetBehavior.STATE_COLLAPSED: {
+                        searchbar.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                    case BottomSheetBehavior.STATE_DRAGGING:
+                        break;
+                    case BottomSheetBehavior.STATE_SETTLING:
+                        searchbar.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+            }
+        });
+        bottomSheetTextView = bottomSheet.findViewById(R.id.bottom_sheet_title);
+        //ItemPagerAdapter adapter = new ItemPagerAdapter(this,mDrawables);
+        //ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        //viewPager.setAdapter(adapter);
+
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        //behavior.setCollapsible(false);
     }
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
@@ -513,11 +520,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mClusterManager.addItems(mAntennaCollection);
         fillAntennaSpinner();
     }
+    //NAVIGATION INTENT
     public void getDirectionsTo(View view) {
         Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
                 Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
         startActivity(intent);
     }
+    //START TICKET INTENT
     public void startObjectActivity(View view){
         Intent intent = new Intent(MainActivity.this, ObjectActivity.class);
 
@@ -546,6 +555,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
+    //SHOW TICKET PREVIEW
     public void buildPreview(){
         if(!statusResponse.trim().isEmpty()){
             //remove
@@ -560,10 +570,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 {
                     //get all informations out of server responses
                     JSONObject jstatObj = jstatArray.getJSONObject(i);
-                    JSONObject jpicObj = jpicArray.getJSONObject(i);
+
                     int status = jstatObj.getInt("status");
                     String module_id = jstatObj.getString("module_id");
-                    String fullpath = getResources().getString(R.string.server_url) + jpicObj.getString("path");
+
 
                     if(status != 0) {
                         //BUILD UP LAYOUT---------
@@ -577,7 +587,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         rlp.setMarginEnd(DPtoPX(16));
                         pic.setLayoutParams(rlp);
                         pic.setImageResource(R.drawable.ic_dummy1);
-                        Picasso.with(pic.getContext()).load(fullpath).into(pic);
+                        //check for pics
+                        for(int j=0;j<jpicArray.length();j++){
+                            JSONObject jpicObj = jpicArray.getJSONObject(j);
+                            if(module_id.equals(jpicObj.getString("module_id"))) {
+                                String fullpath = getResources().getString(R.string.server_url) + jpicObj.getString("path");
+                                Picasso.with(pic.getContext()).load(fullpath).into(pic);
+                            }
+                        }
                         layPrev.addView(pic);
 
                         //name-label
@@ -640,6 +657,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }, 500);  //the time is in miliseconds
         }
     }
+    //Convert DP input to Pixels
     private int DPtoPX(int dp){
         int px = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
@@ -647,7 +665,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 getResources().getDisplayMetrics());
         return px;
     }
-
+    //DOWNLOAD STATUSES
     private void grabStatuses() {
         String get_url = getApplication().getResources().getString(R.string.statusScript)
                 +"?antID=" + selectedAntenna.getTitle();
@@ -690,7 +708,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
     }
-
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {
 

@@ -57,7 +57,7 @@ public class ObjectActivity extends AppCompatActivity {
         tabs.setupWithViewPager(viewPager);
         FloatingActionButton fab = findViewById(R.id.fab);
 
-        obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
+        obj = getResources().getStringArray(R.array.module_array);
         objnr = new int[]{R.string.Object1, R.string.Object2, R.string.Object3};
         //select right Tab
         int defaultValue = 0;
@@ -66,6 +66,7 @@ public class ObjectActivity extends AppCompatActivity {
         selectedAntenna = getIntent().getParcelableExtra("Antenna");
         user = getIntent().getStringExtra("user");
         ticketID = UUID.randomUUID().toString().replaceAll("-","").substring(0,10);
+
         TextView txtID = findViewById(R.id.txtAntID);
         txtID.setText(getAntennaID());
         TextView txtTickID = findViewById(R.id.txtTickID);
@@ -104,6 +105,7 @@ public class ObjectActivity extends AppCompatActivity {
         return user;
     }
     public String getTicketID(){return ticketID;}
+
     public void reloadTab(){
         try {
             Thread.sleep(1000);

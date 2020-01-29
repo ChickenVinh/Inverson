@@ -79,7 +79,7 @@ public class PlaceholderFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        obj = new String[]{getResources().getString(R.string.Object1), getResources().getString(R.string.Object2), getResources().getString(R.string.Object3)};
+        obj = getResources().getStringArray(R.array.module_array);
         pageViewModel = ViewModelProviders.of(this).get(PageViewModel.class);
         parent = (ObjectActivity) getActivity();
         antenna = parent.getAntennaID();

@@ -27,9 +27,7 @@ public class PageViewModel extends AndroidViewModel {
     private MutableLiveData<Integer> mIndex = new MutableLiveData<>();
     private String antenna = "";
     private String module = "";
-    private String[] obj = {getApplication().getResources().getString(R.string.Object1),
-                            getApplication().getResources().getString(R.string.Object2),
-                            getApplication().getResources().getString(R.string.Object3)};
+    private String[] obj = getApplication().getResources().getStringArray(R.array.module_array);
     private LiveData<String> mText = Transformations.map(mIndex, new Function<Integer, String>() {
         @Override
         public String apply(Integer input) {
