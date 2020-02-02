@@ -98,12 +98,12 @@ public class PlaceholderFragment extends Fragment {
             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_main, container, false);
         final TextView textView = root.findViewById(R.id.section_label);
-        linearLayout = root.findViewById(R.id.imgLayout);
+        linearLayout = root.findViewById(R.id.create_tick_Layout);
         commentView = root.findViewById(R.id.commentView);
         Button btnEditSave = root.findViewById(R.id.btnEditSave);
         ImageButton btnTakePic = root.findViewById(R.id.btnTakePicture);
         spinStatus = root.findViewById(R.id.spinnerStatus);
-        pageViewModel.getText().observe(this, new Observer<String>() {
+        pageViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
@@ -130,7 +130,7 @@ public class PlaceholderFragment extends Fragment {
     }
 
     private void setCommentObserver(){
-        pageViewModel.getComments().observe(this, new Observer<String>() {
+        pageViewModel.getComments().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if(s.isEmpty()){
@@ -142,7 +142,7 @@ public class PlaceholderFragment extends Fragment {
         });
     }
     private void setStatusObserver(){
-        pageViewModel.getStatus().observe(this, new Observer<String>() {
+        pageViewModel.getStatus().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 if(s.isEmpty()){
@@ -204,7 +204,7 @@ public class PlaceholderFragment extends Fragment {
             img.setLayoutParams(new LinearLayout.LayoutParams((int)getContext().getResources().getDisplayMetrics().density * 150,
                     LinearLayout.LayoutParams.MATCH_PARENT));
             //img.setImageResource(R.drawable.ic_ex_img);
-            Picasso.with(img.getContext()).load(imgPathes.get(i)).into(img);
+            Picasso.get().load(imgPathes.get(i)).into(img);
             img.setId(i);
             img.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -220,7 +220,7 @@ public class PlaceholderFragment extends Fragment {
 
             @Override
             public void loadImage(ImageView imageView, String image) {
-                Picasso.with(getContext()).load(image).into(imageView);
+                Picasso.get().load(image).into(imageView);
             }
         }).withStartPosition(index).show();
     }

@@ -12,6 +12,7 @@
     <string name="error_invalid_email">This Username is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_login_fatal">Fatal Error at Login. Call Administrator</string>
     <string name="error_field_required">This field is required</string>
     <string name="error_antenna_not_found">Antenna not Found!</string>
     <string name="searchbar_hint">Enter ID, Address or City</string>
@@ -39,14 +40,25 @@
     <string name="openclose_ticket">http://gastroconsultung-catering.com/scripts/ticket.php</string>
     <string name="picture_script">http://gastroconsultung-catering.com/scripts/set_picture.php</string>
 
+    <string name="parseTicketScript">http://gastroconsultung-catering.com/parseTicket.php</string>
+    <string name="getAntennaDataScript">http://gastroconsultung-catering.com/getAntennaData.php</string>
+
     <string-array name="module_array">
-        <item>Object-1</item>
-        <item>Object-2</item>
-        <item>Object-3</item>
-        <item>Object-4</item>
-        <item>Object-5</item>
-        <item>Object-6</item>
+        <item>Cột</item>
+        <item>Phòng</item>
+        <item>Máy phát điện</item>
+        <item>Điện trong phòng</item>
+        <item>Đường điện nước</item>
+        <item>Hạnh mực ???</item>
     </string-array>
+
+    <string-array name="ticket_type_array">
+        <item>UC-ứng cứ</item>
+        <item>SC-sự cố</item>
+        <item>BD-bảo duỡng </item>
+        <item>khác…</item>
+    </string-array>
+
 
     <string-array name="status_array">
         <item>Select status…</item>
@@ -54,5 +66,6 @@
         <item>Service Required</item>
 
     </string-array>
+    <string name="title_activity_create_ticket">CreateTicket</string>
 
 </resources>

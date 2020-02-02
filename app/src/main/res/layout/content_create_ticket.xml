@@ -1,29 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/LinearVLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.main.PlaceholderFragment">
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".CreateTicket"
+    tools:showIn="@layout/activity_create_ticket">
 
-    <TextView
-        android:id="@+id/section_label"
+    <Spinner
+        android:id="@+id/spinner_module"
+        style="@style/Platform.Widget.AppCompat.Spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Object Name"
-        android:textSize="24sp" />
+        android:entries="@array/module_array"
+        android:spinnerMode="dialog" />
 
-    <TextView
-        android:id="@+id/date"
+    <Spinner
+        android:id="@+id/spinner_type"
+        style="@style/Platform.Widget.AppCompat.Spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:text="dd/mm/yyyy" />
+        android:entries="@array/ticket_type_array"
+        android:spinnerMode="dialog" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="173dp"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="20dp">
 
         <LinearLayout
@@ -34,7 +38,7 @@
 
             <ImageButton
                 android:id="@+id/btnTakePicture"
-                android:layout_width="80dp"
+                android:layout_width="0dp"
                 android:layout_height="183dp"
                 android:layout_weight="1"
                 android:onClick="dispatchTakePictureIntent"
@@ -42,30 +46,16 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <Spinner
-        android:id="@+id/spinnerStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:entries="@array/status_array"
-        android:prompt="@android:string/selectTextMode" />
-
     <EditText
-        android:id="@+id/commentView"
+        android:id="@+id/txtCommentCreate"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="181dp"
         android:ems="10"
-        android:enabled="false"
+        android:enabled="true"
         android:gravity="start|top"
-        android:hint="@string/loading_comment"
+        android:hint="@string/no_comment"
         android:inputType="textMultiLine"
         android:maxLength="4000"
         android:textColor="@color/common_google_signin_btn_text_dark_focused" />
-
-    <Button
-        android:id="@+id/btnEditSave"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Edit" />
 
 </LinearLayout>

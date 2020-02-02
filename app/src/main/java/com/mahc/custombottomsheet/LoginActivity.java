@@ -28,7 +28,7 @@ import com.android.volley.toolbox.StringRequest;
 import timber.log.Timber;
 
 /**
- * A login screen that offers login via user/password.
+ * A login screen that offers login via mUser/password.
  */
 public class LoginActivity extends AppCompatActivity {
 
@@ -42,6 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     private View mProgressView;
     private View mLoginFormView;
     private boolean isLoggedIn = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -56,9 +57,9 @@ public class LoginActivity extends AppCompatActivity {
 
 
         //if already logged in
-        if (sharedpreferences.contains("name") && sharedpreferences.contains("pw")) {
+        if (sharedpreferences.contains("user") && sharedpreferences.contains("pw")) {
             isLoggedIn = true;
-            String email = sharedpreferences.getString("name", "");
+            String email = sharedpreferences.getString("user", "");
             String password = sharedpreferences.getString("pw", "");
             mEmailView.setText(email);
             mPasswordView.setText(password);
@@ -95,6 +96,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
+
         //DEV#####
         //mEmailView.setText("admin");
         //mPasswordView.setText("admin");
@@ -119,7 +121,7 @@ public class LoginActivity extends AppCompatActivity {
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
+        // Check for a valid password, if the mUser entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
@@ -145,19 +147,20 @@ public class LoginActivity extends AppCompatActivity {
             if(!isLoggedIn) {
                 //Save Credentials
                 SharedPreferences.Editor editor = sharedpreferences.edit();
-                editor.putString("name", mEmailView.getText().toString());
+                editor.putString("user", mEmailView.getText().toString());
                 editor.putString("pw", mPasswordView.getText().toString());
                 editor.apply();
             }
             // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
+            // perform the mUser login attempt.
             showProgress(true);
             queryServer(email,password);
+            //Request Permissions
 
         }
     }
 
-    private void queryServer(String qemail, String qpassword){
+    private void queryServer(final String qemail, String qpassword){
         //http://gastroconsultung-catering.com/testing/vinh/login.php?user=admin&password=admin
         String url = getResources().getString(R.string.server_login_url)
                                                                         +"?user="+qemail
@@ -167,14 +170,21 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         showProgress(false);
-                        if(response.equals("1")) {//login success
-                            Intent suc = new Intent(LoginActivity.this, MainActivity.class);
-                            suc.putExtra("User", mEmailView.getText().toString());
-                            startActivity(suc);
-                            finish();//this one prevents u from going back to login screen
-                        }else if(response.equals("0")){//login failed
+                        if(response.equals("0")){//login failed
                             mPasswordView.setError(getString(R.string.error_incorrect_password));
                             mPasswordView.requestFocus();
+                        }else if(response.equals("-1")){
+                            mPasswordView.setError(getString(R.string.error_login_fatal));
+                            mPasswordView.requestFocus();
+                        }else if(!response.trim().isEmpty()){//login success
+                            SharedPreferences.Editor editor = sharedpreferences.edit();
+                            editor.putString("user", response);
+                            editor.apply();
+
+                            Intent suc = new Intent(LoginActivity.this, MainActivity.class);
+                            suc.putExtra("User", response);
+                            startActivity(suc);
+                            finish();//this one prevents u from going back to login screen
                         }
                     }
                 }, new Response.ErrorListener() {

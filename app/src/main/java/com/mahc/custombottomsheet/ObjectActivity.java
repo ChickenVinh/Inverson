@@ -26,7 +26,8 @@ import com.google.android.material.tabs.TabLayout;
 import com.mahc.custombottomsheet.ui.main.PageViewModel;
 import com.mahc.custombottomsheet.ui.main.SectionsPagerAdapter;
 
-import java.util.UUID;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ObjectActivity extends AppCompatActivity {
     private int page;
@@ -43,6 +44,7 @@ public class ObjectActivity extends AppCompatActivity {
     ImageView[] objImg = new ImageView[4];
     TabLayout tabs;
     ViewPager viewPager;
+    JSONObject ticketData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,16 +64,20 @@ public class ObjectActivity extends AppCompatActivity {
         //select right Tab
         int defaultValue = 0;
         //GET INTENT EXTRAS
-        page = getIntent().getIntExtra("obj", defaultValue);
-        selectedAntenna = getIntent().getParcelableExtra("Antenna");
-        user = getIntent().getStringExtra("user");
-        ticketID = UUID.randomUUID().toString().replaceAll("-","").substring(0,10);
+        if(getIntent().hasExtra("json")) {
+            try {
+                ticketData = new JSONObject(getIntent().getStringExtra("json"));
+                ticketID = ticketData.getString("ticket_id");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
 
         TextView txtID = findViewById(R.id.txtAntID);
         txtID.setText(getAntennaID());
         TextView txtTickID = findViewById(R.id.txtTickID);
         txtTickID.setText(ticketID);
-        openTicket();
+
         //GET SELECTED TAB
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -113,14 +119,14 @@ public class ObjectActivity extends AppCompatActivity {
         Intent intent = new Intent(ObjectActivity.this, ObjectActivity.class);
         intent.putExtra("obj", page);
         intent.putExtra("Antenna",selectedAntenna);
-        intent.putExtra("user",user);
+        intent.putExtra("mUser",user);
         startActivity(intent);
         finish();
     }
     private void openTicket(){
         String get_url = getResources().getString(R.string.openclose_ticket)
                 +"?ticketID="+getTicketID()
-                +"&user="+getUser()
+                +"&mUser="+getUser()
                 +"&action="+"open"
                 +"&antID="+getAntennaID();
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
@@ -173,7 +179,7 @@ public class ObjectActivity extends AppCompatActivity {
                     case DialogInterface.BUTTON_POSITIVE:
                         String get_url = getResources().getString(R.string.openclose_ticket)
                                 +"?ticketID="   +getTicketID()
-                                +"&user="       +getUser()
+                                +"&mUser="       +getUser()
                                 +"&action="     +"close";
                         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                                 new Response.Listener<String>() {
