@@ -33,6 +33,7 @@ import androidx.annotation.RequiresApi;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.volley.Request;
@@ -79,7 +80,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private final int REQUEST_LOCATION_PERMISSION = 1;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     private static final int CREATE_TICKET_REQUEST = 69;
-
+    private static final int EDIT_TICKET_REQUEST = 96;
     private GoogleMap mMap;
     private View mapView;
     private Context context = this;
@@ -158,7 +159,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     locationButton.getLayoutParams();
             // position on right bottom
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0);
+            layoutParams.addRule(RelativeLayout.BELOW, 0);
             layoutParams.setMargins(0, 120, 0, 0);
         }
         final CustomClusterRenderer renderer = new CustomClusterRenderer(this, mMap, mClusterManager);
@@ -309,7 +310,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
         grabAllAntennaData(item.getTitle());
-
         selectedAntenna = item;
         behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
         CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -322,7 +322,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         RoundedBitmapDrawable roundedPic = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
         final float roundPx = (float) bitmap.getWidth() * 0.06f;
         roundedPic.setCornerRadius(roundPx);
-
+        NestedScrollView bottomsheet = findViewById(R.id.bottom_sheet);
+        bottomsheet.smoothScrollTo(0,0);
 
         ImageView Pic = findViewById(R.id.bottom_sheet_pic);
         TextView Title = findViewById(R.id.bottom_sheet_title);
@@ -429,11 +430,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     //START TICKET INTENT
     public void startObjectActivity(View view, JSONObject ticketData){
-        Intent intent = new Intent(MainActivity.this, ObjectActivity.class);
+        Intent intent = new Intent(MainActivity.this, ViewTicketActivity.class);
 
         intent.putExtra("ticketData", ticketData.toString());
 
-        startActivity(intent);
+        startActivityForResult(intent, EDIT_TICKET_REQUEST);
     }
     //CREATING EMPTY IMG FILE
     private File createImageFile() throws IOException {
@@ -618,8 +619,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Snackbar.make(findViewById(R.id.mapsCoordLayout), "SUCCESS!"+result, Snackbar.LENGTH_SHORT)
                         .setAction("Action", null).show();
             }
+        }else if(requestCode == EDIT_TICKET_REQUEST){
+            if (resultCode == RESULT_OK) {
+                //-1\0\1 - error\nothing edited\success edit
+                int result = data.getIntExtra("result",0);
+                if(result == -1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "ERROR uploading Changes!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }else if(result == 1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket edited!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }
+                int closed = data.getIntExtra("closed", 0);
+                if(closed == 1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket closed!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }else if(closed == -1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket not closed!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }
+            }
         }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (selectedAntenna != null) {
+            displayAntenna(selectedAntenna);
+        }
+    }
+
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {
 

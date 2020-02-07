@@ -13,7 +13,7 @@ public class Antenna implements ClusterItem, Parcelable {
     private String mExtTitle;
     private String mRegion;
     private String mProvince;
-    private Module[] modules;
+
 
     public Antenna(double lat, double lng) {
         mPosition = new LatLng(lat, lng);
@@ -22,7 +22,6 @@ public class Antenna implements ClusterItem, Parcelable {
         mExtTitle = null;
         mRegion = null;
         mProvince = null;
-        modules = new Module[3];
     }
     //for SQL parse
     public Antenna(double lat, double lng, String title, String snippet, String ext_title, String region, String province) {
@@ -101,6 +100,5 @@ public class Antenna implements ClusterItem, Parcelable {
         parcel.writeString(mExtTitle);
         parcel.writeString(mRegion);
         parcel.writeString(mProvince);
-        parcel.writeArray(modules);
     }
 }

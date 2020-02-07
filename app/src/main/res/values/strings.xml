@@ -37,7 +37,7 @@
     <string name="statusScript">http://gastroconsultung-catering.com/scripts/set_status.php</string>
     <string name="URL_antennasCSV">http://gastroconsultung-catering.com/infos.csv</string>
     <string name="URL_antennas">http://gastroconsultung-catering.com/scripts/getAllAntennas.php</string>
-    <string name="openclose_ticket">http://gastroconsultung-catering.com/scripts/ticket.php</string>
+    <string name="close_ticket">http://gastroconsultung-catering.com/closeTicket.php</string>
     <string name="picture_script">http://gastroconsultung-catering.com/scripts/set_picture.php</string>
 
     <string name="parseTicketScript">http://gastroconsultung-catering.com/parseTicket.php</string>
@@ -49,7 +49,7 @@
         <item>Máy phát điện</item>
         <item>Điện trong phòng</item>
         <item>Đường điện nước</item>
-        <item>Hạnh mực ???</item>
+        <item>Hạnh mực XXXXX</item>
     </string-array>
 
     <string-array name="ticket_type_array">
@@ -67,5 +67,6 @@
 
     </string-array>
     <string name="title_activity_create_ticket">CreateTicket</string>
+    <string name="title_activity_view_ticket">ViewTicketActivity</string>
 
 </resources>

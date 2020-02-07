@@ -66,6 +66,8 @@ public class CreateTicket extends AppCompatActivity {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        TextView title = findViewById(R.id.txtViewTicketTitle);
+        title.setText("Create Ticket");
 
         setupSpinnerListener();
 
@@ -75,7 +77,7 @@ public class CreateTicket extends AppCompatActivity {
         antenna = getIntent().getParcelableExtra("antenna");
         ticketJSON = new JSONObject();
         try {
-            ticketJSON.put("pics",new JSONArray());
+            ticketJSON.put("picture",new JSONArray());
             ticketJSON.put("user", mUser);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -140,7 +142,7 @@ public class CreateTicket extends AppCompatActivity {
             }
         });
 
-        linearLayout.addView(img);
+        linearLayout.addView(img,1);
     }
     private void openImageFull(final Bitmap[] imgList, int index){
         try {
@@ -149,7 +151,7 @@ public class CreateTicket extends AppCompatActivity {
                 public void loadImage(ImageView imageView, Bitmap image) {
                     imageView.setImageBitmap(image);
                 }
-            }).withStartPosition(index).show();
+            }).withStartPosition(index-1).show();
         }catch (Exception ex){
             ex.printStackTrace();
             Toast.makeText(getBaseContext(),"Error while opening.",Toast.LENGTH_LONG).show();
@@ -217,11 +219,10 @@ public class CreateTicket extends AppCompatActivity {
                 picJO.put("img_path", img_data);
                 picJO.put("timestamp", img_timestamp);
                 //add it to the Big one
-                ticketJSON.getJSONArray("pics").put(picJO);
+                ticketJSON.getJSONArray("picture").put(picJO);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
         }
 /*
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() != null) {
@@ -243,7 +244,7 @@ public class CreateTicket extends AppCompatActivity {
             }
 
         }
-        */
+*/
     }
 
     private void sendTicketData(JSONObject jTicket){
