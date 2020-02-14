@@ -1,19 +1,29 @@
 package com.mahc.custombottomsheet;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
@@ -23,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -42,6 +53,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -50,6 +63,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.maps.android.clustering.ClusterManager;
@@ -65,7 +79,9 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -78,48 +94,44 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private static final int DEFAULT_ZOOM = 12;
     private final int REQUEST_LOCATION_PERMISSION = 1;
+    private final int REQUEST_STORAGE_PERMISSION = 2;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     private static final int CREATE_TICKET_REQUEST = 69;
     private static final int EDIT_TICKET_REQUEST = 96;
     private GoogleMap mMap;
     private View mapView;
+    private FusedLocationProviderClient fusedLocationClient;
     private Context context = this;
+    private SharedPreferences sharedPreferences;
     private ClusterManager<Antenna> mClusterManager;
     private ArrayList<Antenna> mAntennaCollection = new ArrayList<>();
+    private ArrayList<String> antennaWithTickets = new ArrayList<>();
     private String mUser;
     private Antenna selectedAntenna = null;
-    private String obj;
-    private int counter = 0;
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehavior behavior;
     ProgressDialog progressDialog;
-    //IMG SERVER STUFF
-    String ServerURL = "http://gastroconsultung-catering.com/getData.php";
-    String ImageNameFieldOnServer = "image_name" ;
-    String ImagePathFieldOnServer = "image_path" ;
-    boolean check = true;
+    ProgressBar progressMaps;
     private String currentPhotoPath;
-    private int page = 0;
 
-    String statusResponse = "";
-    String pictureResponse = "";
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.registerReceiver(this.mConnReceiver,
+                new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         //Logger
         Timber.plant(new DebugTree());
         //Get the Username from Login activity###MAYBE USE SHARED PREFRENCES?
         Intent suc = super.getIntent();
         mUser = suc.getStringExtra("User");
-
+        sharedPreferences = getSharedPreferences("antennas", Context.MODE_PRIVATE);
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        progressMaps = findViewById(R.id.progressMaps);
 
-        //Permission stuff
-        requestLocationPermission();
 
         //Download Antennas
         //downloadCSV();
@@ -127,6 +139,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //setting up some Views
         setupBottomSheet();
         setupSearchBox();
+
+        //Permission stuff
+        requestLocationPermission();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -149,6 +164,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
             }
         });
+        mMap.setMinZoomPreference(5f);
         mMap.setMyLocationEnabled(true);
         if (mapView != null &&
                 mapView.findViewById(Integer.parseInt("1")) != null) {
@@ -159,8 +175,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     locationButton.getLayoutParams();
             // position on right bottom
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
-            layoutParams.addRule(RelativeLayout.BELOW, 0);
-            layoutParams.setMargins(0, 120, 0, 0);
+
+            layoutParams.addRule(RelativeLayout.BELOW, findViewById(R.id.Searchbar).getId());
+            layoutParams.setMargins(0, findViewById(R.id.Searchbar).getHeight(), 0, 0);
         }
         final CustomClusterRenderer renderer = new CustomClusterRenderer(this, mMap, mClusterManager);
 
@@ -173,11 +190,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 displayAntenna(item);
                 return true;
             }
+
+
         });
-        // Show Vietnam
-        LatLng vietnam = new LatLng(16, 106.5);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,5.5f));
-        requestCameraPermission();
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),12f));
+                        }else{
+                            // Show Vietnam
+                            LatLng vietnam = new LatLng(16, 106.5);
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,5.5f));
+                        }
+                    }
+                });
     }
     //PERMISSION STUFF
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -207,6 +237,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
             if (!EasyPermissions.hasPermissions(this, perms)) {
                 EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
+            }else{
+                granted = true;
+            }
+        }
+    }
+    public void requestStoragePermission() {
+        boolean granted = false;
+        while (!granted) {
+            String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+            if (!EasyPermissions.hasPermissions(this, perms)) {
+                EasyPermissions.requestPermissions(this, "Please grant the r-storage permission", REQUEST_STORAGE_PERMISSION, perms);
             }else{
                 granted = true;
             }
@@ -294,18 +335,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
                         buildPreview(response);
-
                     }
                 }, new Response.ErrorListener() {
-
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
                     }
                 });
-        RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(jsonObjectRequest);
+        if(RequestQueueSingleton.getInstance(getApplicationContext()).checkForConnection()) {
+            RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(jsonObjectRequest);
+        }else{
+            if(sharedPreferences.contains("antenna_json")) {
+                Toast.makeText(MainActivity.this,"No Connection: Showing local copy",Toast.LENGTH_LONG).show();
+                new ParsingTask().execute(sharedPreferences.getString("antenna_json", ""));
+            }else{//try it atleast
+                RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(jsonObjectRequest);
+            }
+        }
     }
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
@@ -344,46 +391,43 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
     private void getAndParseAntennas(){
-        progressDialog = ProgressDialog.show(MainActivity.this,"Download Antennas","Please Wait",false,false);
-        String get_url = getResources().getString(R.string.URL_antennas);
-
+        //progressDialog = ProgressDialog.show(MainActivity.this,"Download Antennas","Please Wait",false,false);
+        progressMaps.setVisibility(View.VISIBLE);
+        String get_url = getResources().getString(R.string.getAntennaScript);
+        if(sharedPreferences.contains("antenna_json")) {
+            try {
+                String chk = new JSONObject(sharedPreferences.getString("antenna_json", "")).getString("Checksum");
+                get_url = getResources().getString(R.string.getAntennaScript)
+                        + "?checksum=" + chk;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         StringRequest stringRequest = new StringRequest(Request.Method.GET, get_url,
                 new Response.Listener<String>() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onResponse(String response) {
                         if(!response.isEmpty()){
-                            try {
-                                ArrayList<Antenna> tmp_antColl = new ArrayList<>();
-                                JSONArray jArray = new JSONArray(response);
-                                for (int i=0; i < jArray.length(); i++)
-                                {
-                                    JSONObject tmpObj = jArray.getJSONObject(i);
-                                    String ID = tmpObj.getString("AntennaID");
-                                    String extID = tmpObj.getString("Company_site_name");
-                                    String region = tmpObj.getString("Region");
-                                    String province = tmpObj.getString("Province");
-                                    String Address = tmpObj.getString("Site_locate_Address");
-                                    Double klat = tmpObj.getDouble("Lat");
-                                    Double klong = tmpObj.getDouble("Long");
-                                    //Create Antenna and add to Collection
-                                    Antenna tmp_ant = new Antenna(klat, klong, ID, Address, extID, region, province);
-                                    tmp_antColl.add(tmp_ant);
-                                }
-                                addAntennasToCollection(tmp_antColl);
-                            }catch (JSONException ex){
-                                ex.printStackTrace();
+                            if(response.length()> 20 && response.startsWith("{")) {//json?
+                                new ParsingTask().execute(response);
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("antenna_json", response);
+                                editor.apply();
+                            }else{//checksum?
+                                new ParsingTask().execute(sharedPreferences.getString("antenna_json", ""));
                             }
                         }else{
                             Toast.makeText(getBaseContext(), "Network Problem! No Antenna Data", Toast.LENGTH_LONG).show();
                         }
-                        progressDialog.dismiss();
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this,"NetworkCall Error: " + error.getMessage(),Toast.LENGTH_LONG).show();
-                progressDialog.dismiss();
+                if(sharedPreferences.contains("antenna_json")) {
+                    Toast.makeText(MainActivity.this,"NetworkCall Error: Showing local copy",Toast.LENGTH_LONG).show();
+                    new ParsingTask().execute(sharedPreferences.getString("antenna_json", ""));
+                }
             }
         });
         // Add the request to the RequestQueue.
@@ -391,7 +435,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     //FILL ANTENNASPINNER
     public void fillAntennaSpinner() {
-
         //ArrayList<Marker> MarkerList = new ArrayList<Marker>(mClusterManager.getMarkerCollection().getMarkers());
         ArrayList<String> IDstrings = new ArrayList<String>();
         IDstrings.add("");
@@ -421,6 +464,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Another interface callback
             }
         });
+        mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        progressMaps.setVisibility(View.INVISIBLE);
     }
     //NAVIGATION INTENT
     public void getDirectionsTo(View view) {
@@ -429,12 +474,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(intent);
     }
     //START TICKET INTENT
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void startObjectActivity(View view, JSONObject ticketData){
         Intent intent = new Intent(MainActivity.this, ViewTicketActivity.class);
 
         intent.putExtra("ticketData", ticketData.toString());
 
         startActivityForResult(intent, EDIT_TICKET_REQUEST);
+
+        requestCameraPermission();
     }
     //CREATING EMPTY IMG FILE
     private File createImageFile() throws IOException {
@@ -476,6 +524,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 //BUILD UP LAYOUT---------
                 final RelativeLayout layPrev = new RelativeLayout(this);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    layPrev.setElevation(5f);
+                }
                 int[] attrs = new int[]{R.attr.selectableItemBackground};
                 TypedArray typedArray = this.obtainStyledAttributes(attrs);
                 int backgroundResource = typedArray.getResourceId(0, 0);
@@ -532,6 +583,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 RelativeLayout.LayoutParams rlp_id = new RelativeLayout.LayoutParams(
                         RelativeLayout.LayoutParams.WRAP_CONTENT,
                         RelativeLayout.LayoutParams.WRAP_CONTENT);
+                rlp_id.topMargin = DPtoPX(10);
                 rlp_id.addRule(RelativeLayout.RIGHT_OF, pic.getId());
                 ticketLabel.setLayoutParams(rlp_id);
                 layPrev.addView(ticketLabel);
@@ -579,6 +631,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 linlay.addView(layPrev);
 
                 layPrev.setOnClickListener(new View.OnClickListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.M)
                     @Override
                     public void onClick(View view) {
                         //layPrev.setBackgroundColor(Color.LTGRAY);
@@ -591,8 +644,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }catch (Exception ex){
             ex.printStackTrace();
         }
-
-
     }
     //Convert DP input to Pixels
     private int DPtoPX(int dp){
@@ -602,11 +653,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 getResources().getDisplayMetrics());
         return px;
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void startCreateTicketActivity(View view) {
         Intent intent = new Intent(MainActivity.this, CreateTicket.class);
         intent.putExtra("antenna",selectedAntenna);
 
         startActivityForResult(intent,CREATE_TICKET_REQUEST);
+
+        requestCameraPermission();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -617,6 +671,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             if (resultCode == RESULT_OK) {
                 String result = data.getStringExtra("result");
                 Snackbar.make(findViewById(R.id.mapsCoordLayout), "SUCCESS!"+result, Snackbar.LENGTH_SHORT)
+                        .setAction("Action", null).show();
+            }else if (resultCode == RESULT_FIRST_USER) {
+                String result = data.getStringExtra("result");
+                Snackbar.make(findViewById(R.id.mapsCoordLayout), "OFFLINE!"+result, Snackbar.LENGTH_SHORT)
                         .setAction("Action", null).show();
             }
         }else if(requestCode == EDIT_TICKET_REQUEST){
@@ -648,6 +706,124 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (selectedAntenna != null) {
             displayAntenna(selectedAntenna);
         }
+
+    }
+    private void superBack(){
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(RequestQueueSingleton.getInstance(getApplicationContext()).getCacheLength() > 0){
+            showClosingDialog();
+        }else{
+            super.onBackPressed();
+        }
+    }
+
+    private void showClosingDialog(){
+        DialogInterface.OnClickListener closingTicketdialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        RequestQueueSingleton.getInstance(getApplicationContext()).addListToQueue();
+                        superBack();
+                        break;
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        break;
+                }
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("There are Unsaved Tickets. You will lose them!").setPositiveButton("Yes", closingTicketdialogClickListener)
+                .setNegativeButton("No", closingTicketdialogClickListener).show();
+    }
+    public void updateApp(View view) {
+        requestStoragePermission();
+        try {
+            UpdateManager updateManager = new UpdateManager(getApplicationContext(),"http://gastroconsultung-catering.com/update/Iverson-0.5.1.apk");
+            updateManager.enqueueDownload();
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+
+
+    }
+    private void sendLocationRequest(){
+        Snackbar.make(findViewById(R.id.mapsCoordLayout), "Sending new Location...", Snackbar.LENGTH_LONG)
+                .setAction("SEND", null).show();
+        final LatLng new_pos = mMap.getCameraPosition().target;
+        final LatLng old_pos = selectedAntenna.getPosition();
+        mMap.addMarker(new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon_gray))
+                .position(old_pos));
+        mMap.addMarker(new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon_green))
+                .position(new_pos)
+                .title(selectedAntenna.getExtTitle() + " - New Location")
+        ).setSnippet("Needs approval from admins.");
+
+        String url = getResources().getString(R.string.requestNewLocationScript);
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        Snackbar.make(findViewById(R.id.mapsCoordLayout), response, Snackbar.LENGTH_SHORT)
+                                .setAction("SEND", null).show();
+                        Log.d("Response", response);
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.getMessage());
+                        Toast.makeText(getApplicationContext(), "Network Error @ Sending request", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("new_latlng", new_pos.latitude + "/" + new_pos.longitude);
+                params.put("old_latlng", old_pos.latitude + "/" + old_pos.longitude);
+                params.put("antenna_id", selectedAntenna.toString());
+                params.put("user_id", mUser);
+                return params;
+            }
+        };
+        // Add the request to the RequestQueue.
+        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
+    }
+    public void changeAntennaPosition(View view) {
+        final ImageView newPin = findViewById(R.id.newPin);
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        Snackbar.make(findViewById(R.id.mapsCoordLayout), "Choose a new Location for this Antenna!", Snackbar.LENGTH_INDEFINITE)
+                .setAction("SET", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        newPin.setVisibility(View.GONE);
+
+                        sendLocationRequest();
+                    }
+                }).show();
+
+        newPin.setVisibility(View.VISIBLE);
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),14));
+                        }
+                    }
+                });
+
+
     }
 
     //CUSTOM_MARKER_ICON
@@ -664,9 +840,82 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override protected void onBeforeClusterItemRendered(Antenna item,
                                                              MarkerOptions markerOptions) {
-            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
+            if(antennaWithTickets.contains(item.getTitle())) {
+                markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon_r)).snippet(item.getTitle());
+            }else{
+                markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
+            }
+
         }
     }
 
+    private final class ParsingTask extends AsyncTask<String, Void, ArrayList<Antenna>> {
 
+        @Override
+        protected ArrayList<Antenna> doInBackground(String... params) {
+            try {
+                JSONObject responseJSON = new JSONObject(params[0]);
+                //save antennas with tickets
+                JSONArray antTick = responseJSON.getJSONArray("WithTickets");
+                for(int i = 0; i<antTick.length();i++){
+                    antennaWithTickets.add(antTick.getString(i));
+                }
+                //extract Antennas
+                ArrayList<Antenna> tmp_antColl = new ArrayList<>();
+                JSONArray jArray = responseJSON.getJSONArray("Antennas");
+                for (int i = 0; i < jArray.length(); i++) { //start with 1 cause 0 is checksum
+                    JSONObject tmpObj = jArray.getJSONObject(i);
+                    String ID = tmpObj.getString("antenna_id");
+                    String extID = tmpObj.getString("company_site_name");
+                    String region = tmpObj.getString("region");
+                    String province = tmpObj.getString("province");
+                    String Address = tmpObj.getString("site_locate_address");
+                    Double klat = tmpObj.getDouble("lat");
+                    Double klong = tmpObj.getDouble("lng");
+                    //Create Antenna and add to Collection
+                    Antenna tmp_ant = new Antenna(klat, klong, ID, Address, extID, region, province);
+                    tmp_antColl.add(tmp_ant);
+                }
+                return tmp_antColl;
+            } catch (JSONException ex) {
+                ex.printStackTrace();
+            }
+            return null;
+        }
+        //OnProgress for a parsing progressbar possible
+
+        @Override
+        protected void onPostExecute(ArrayList<Antenna> antennas) {
+            super.onPostExecute(antennas);
+            addAntennasToCollection(antennas);
+            //progressDialog.dismiss();
+        }
+    }
+
+    public BroadcastReceiver mConnReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            boolean noConnectivity = intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
+            String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);
+            boolean isFailover = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER, false);
+
+            NetworkInfo currentNetworkInfo = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
+            NetworkInfo otherNetworkInfo = intent.getParcelableExtra(ConnectivityManager.EXTRA_OTHER_NETWORK_INFO);
+
+            if(currentNetworkInfo.isConnected()){
+                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+                if(RequestQueueSingleton.getInstance(getApplicationContext()).getCacheLength() > 0) {
+                    RequestQueueSingleton.getInstance(getApplicationContext()).getRequestQueue().start();
+                    RequestQueueSingleton.getInstance(getApplicationContext()).addListToQueue();
+                    if (selectedAntenna != null) {
+                        displayAntenna(selectedAntenna);
+                    }
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Sending offline data...", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            }else{
+                Toast.makeText(getApplicationContext(), "Not Connected", Toast.LENGTH_SHORT).show();
+                RequestQueueSingleton.getInstance(getApplicationContext()).getRequestQueue().stop();
+            }
+        }
+    };
 }

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -283,6 +285,20 @@ public class CreateTicket extends AppCompatActivity {
                 return params;
             }
         };
-        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
+        if(checkForConnection()){
+            RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
+        }else{
+            RequestQueueSingleton.getInstance(this.getApplicationContext()).addToCache(postRequest);
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra("result","Send Ticket when online!");
+            setResult(Activity.RESULT_FIRST_USER,returnIntent);
+            finish();
+        }
+    }
+    boolean checkForConnection(){
+        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        //we are connected to a network
+        return connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED;
     }
 }

@@ -3,10 +3,13 @@ package com.mahc.custombottomsheet;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -290,7 +293,21 @@ public class ViewTicketActivity extends AppCompatActivity {
                 return params;
             }
         };
-        RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
+        if(checkForConnection()){
+            RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
+        }else{
+            RequestQueueSingleton.getInstance(this.getApplicationContext()).addToCache(postRequest);
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra("result","Send Ticket when online!");
+            setResult(Activity.RESULT_FIRST_USER,returnIntent);
+            finish();
+        }
+    }
+    boolean checkForConnection(){
+        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        //we are connected to a network
+        return connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED;
     }
     public void onBackPressed(){
         TextView com = findViewById(R.id.txtCommentEdit);

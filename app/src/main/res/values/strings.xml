@@ -29,6 +29,9 @@
     <string name="new_line_placeholder">__NEWLINE__</string>
     <string name="cross_placeholder">__HASHTAG__</string>
 
+
+
+    <!--
     <string name="server_url">http://gastroconsultung-catering.com/</string>
     <string name="server_login_url">http://gastroconsultung-catering.com/scripts/login.php</string>
     <string name="upload_script">http://gastroconsultung-catering.com/scripts/upload.php</string>
@@ -42,6 +45,17 @@
 
     <string name="parseTicketScript">http://gastroconsultung-catering.com/parseTicket.php</string>
     <string name="getAntennaDataScript">http://gastroconsultung-catering.com/getAntennaData.php</string>
+    <string name="versionScript">http://gastroconsultung-catering.com/update.php</string>
+    <string name="getAntennaScript">http://gastroconsultung-catering.com/update.php</string>
+-->
+    <string name="server_url">https://vtk-group.tech/</string>
+    <string name="server_login_url">https://vtk-group.tech/scripts/login.php</string>
+    <string name="parseTicketScript">https://vtk-group.tech/scripts/parseTicket.php</string>
+    <string name="getAntennaDataScript">https://vtk-group.tech/scripts/getAntennaData.php</string>
+    <string name="versionScript">https://vtk-group.tech/scripts/update.php</string>
+    <string name="getAntennaScript">https://vtk-group.tech/scripts/getAntenna.php</string>
+    <string name="close_ticket">https://vtk-group.tech/scripts/closeTicket.php</string>
+    <string name="requestNewLocationScript">https://vtk-group.tech/scripts/requestLocation.php</string>
 
     <string-array name="module_array">
         <item>Cột</item>
@@ -60,12 +74,12 @@
     </string-array>
 
 
-    <string-array name="status_array">
-        <item>Select status…</item>
-        <item>Status OK</item>
-        <item>Service Required</item>
+    <string name="downloading">Downloading new update…</string>
+    <string name="title_file_download">APK is downloading</string>
+    <string name="storage_access_required">Storage access is required to downloading the file.</string>
+    <string name="storage_permission_denied">Storage permission request was denied.</string>
+    <string name="ok">OK</string>
 
-    </string-array>
     <string name="title_activity_create_ticket">CreateTicket</string>
     <string name="title_activity_view_ticket">ViewTicketActivity</string>
 

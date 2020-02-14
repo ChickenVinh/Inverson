@@ -52,18 +52,28 @@ public class LoginActivity extends AppCompatActivity {
         sharedpreferences = getSharedPreferences("login", Context.MODE_PRIVATE);
         mEmailView = findViewById(R.id.email);
         mPasswordView = findViewById(R.id.password);
-        mLoginFormView = findViewById(R.id.login_form);
+        mLoginFormView = findViewById(R.id.email_login_form);
         mProgressView = findViewById(R.id.login_progress);
+        mLoginFormView.setVisibility(View.VISIBLE);
+        showProgress(false);
 
+        checkForUpdate(mEmailView);
 
         //if already logged in
         if (sharedpreferences.contains("user") && sharedpreferences.contains("pw")) {
+            mLoginFormView.setVisibility(View.GONE);
+            showProgress(true);
+
             isLoggedIn = true;
             String email = sharedpreferences.getString("user", "");
             String password = sharedpreferences.getString("pw", "");
             mEmailView.setText(email);
             mPasswordView.setText(password);
-            attemptLogin();
+
+            Intent suc = new Intent(LoginActivity.this, MainActivity.class);
+            suc.putExtra("User", email);
+            startActivity(suc);
+            finish();//this one prevents u from going back to login screen
         }
 
         // Set up the login form.
@@ -102,7 +112,34 @@ public class LoginActivity extends AppCompatActivity {
         //mPasswordView.setText("admin");
         //attemptLogin();
     }
+    void startUpdate(String url){
+        UpdateManager updateManager = new UpdateManager(getApplicationContext(), url);
+        updateManager.enqueueDownload();
+    }
+    /**
+     * Sends the current Version to the server and
+     * receives a URL of newer APK
+     */
+    public void checkForUpdate(View view){
+        String versionName = BuildConfig.VERSION_NAME;
+        String url = getResources().getString(R.string.versionScript)
+                + "?version=" + versionName;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if(!response.trim().isEmpty()) {
+                            startUpdate(response);
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
+            }
+        });
+        RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+    }
     /**
      * Attempts to sign in or register the account specified by the login form.
      * If there are form errors (invalid email, missing fields, etc.), the
@@ -215,31 +252,24 @@ public class LoginActivity extends AppCompatActivity {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            }
+        });
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        mProgressView.animate().setDuration(shortAnimTime).alpha(
+                show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            }
+        });
     }
+
 }
