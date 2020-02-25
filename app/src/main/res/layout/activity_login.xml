@@ -28,8 +28,7 @@
         android:id="@+id/logoLogin"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_weight="1"
-        app:srcCompat="@drawable/logo_transparent_mini" />
+        app:srcCompat="@drawable/logo31_tr" />
 
     <LinearLayout
         android:id="@+id/email_login_form"
@@ -90,4 +89,13 @@
         android:layout_alignParentBottom="true"
         android:onClick="checkForUpdate"
         android:text="Check for Updates" />
+
+    <TextView
+        android:id="@+id/txtVersion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/button"
+        android:text="Version X.X.X"
+        android:textAlignment="center"
+        android:textColor="#00B0FF" />
 </RelativeLayout>

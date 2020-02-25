@@ -1,12 +1,8 @@
 package com.mahc.custombottomsheet;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -46,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        setTheme(R.style.AppTheme);
+        setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         sharedpreferences = getSharedPreferences("login", Context.MODE_PRIVATE);
@@ -56,13 +52,14 @@ public class LoginActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.login_progress);
         mLoginFormView.setVisibility(View.VISIBLE);
         showProgress(false);
+        TextView txtV = findViewById(R.id.txtVersion);
+        txtV.setText(BuildConfig.VERSION_NAME);
 
         checkForUpdate(mEmailView);
 
         //if already logged in
         if (sharedpreferences.contains("user") && sharedpreferences.contains("pw")) {
             mLoginFormView.setVisibility(View.GONE);
-            showProgress(true);
 
             isLoggedIn = true;
             String email = sharedpreferences.getString("user", "");
@@ -115,12 +112,16 @@ public class LoginActivity extends AppCompatActivity {
     void startUpdate(String url){
         UpdateManager updateManager = new UpdateManager(getApplicationContext(), url);
         updateManager.enqueueDownload();
+        showProgress(false);
+
     }
     /**
      * Sends the current Version to the server and
      * receives a URL of newer APK
      */
     public void checkForUpdate(View view){
+        showProgress(true);
+
         String versionName = BuildConfig.VERSION_NAME;
         String url = getResources().getString(R.string.versionScript)
                 + "?version=" + versionName;
@@ -131,14 +132,17 @@ public class LoginActivity extends AppCompatActivity {
                         if(!response.trim().isEmpty()) {
                             startUpdate(response);
                         }
+                        showProgress(false);
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                showProgress(false);
             }
         });
         RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+
+        //while(mProgressView.getVisibility() == View.VISIBLE);
     }
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -206,13 +210,14 @@ public class LoginActivity extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        showProgress(false);
                         if(response.equals("0")){//login failed
                             mPasswordView.setError(getString(R.string.error_incorrect_password));
                             mPasswordView.requestFocus();
+                            showProgress(false);
                         }else if(response.equals("-1")){
                             mPasswordView.setError(getString(R.string.error_login_fatal));
                             mPasswordView.requestFocus();
+                            showProgress(false);
                         }else if(!response.trim().isEmpty()){//login success
                             SharedPreferences.Editor editor = sharedpreferences.edit();
                             editor.putString("user", response);
@@ -244,32 +249,8 @@ public class LoginActivity extends AppCompatActivity {
         return password.length() > 4;
     }
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
         mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            }
-        });
-
         mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-        mProgressView.animate().setDuration(shortAnimTime).alpha(
-                show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            }
-        });
     }
-
 }

@@ -218,7 +218,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         }else{
                             // Show Vietnam
                             LatLng vietnam = new LatLng(16, 106.5);
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,5.5f));
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(vietnam,6f));
                         }
                     }
                 });

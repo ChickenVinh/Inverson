@@ -29,8 +29,7 @@
     <string name="new_line_placeholder">__NEWLINE__</string>
     <string name="cross_placeholder">__HASHTAG__</string>
 
-
-
+    <string name="close_ticket_button">Close Ticket</string>
     <!--
     <string name="server_url">http://gastroconsultung-catering.com/</string>
     <string name="server_login_url">http://gastroconsultung-catering.com/scripts/login.php</string>
@@ -56,6 +55,7 @@
     <string name="getAntennaScript">https://vtk-group.tech/scripts/getAntenna.php</string>
     <string name="close_ticket">https://vtk-group.tech/scripts/closeTicket.php</string>
     <string name="requestNewLocationScript">https://vtk-group.tech/scripts/requestLocation.php</string>
+    <string name="antennaTitleImageScript">https://vtk-group.tech/scripts/antennaTitleImage.php</string>
 
     <string-array name="module_array">
         <item>Cột</item>
@@ -82,5 +82,8 @@
 
     <string name="title_activity_create_ticket">CreateTicket</string>
     <string name="title_activity_view_ticket">ViewTicketActivity</string>
+    <string name="maxDistance"><![CDATA[>5 km]]></string>
 
+
+    <integer name="fence_radius">1000</integer>
 </resources>

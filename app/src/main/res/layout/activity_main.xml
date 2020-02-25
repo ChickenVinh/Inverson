@@ -47,6 +47,7 @@
         android:alpha="0.8"
         android:background="#00FFFFFF"
         android:elevation="10dp">
+
         <ImageButton
             android:id="@+id/logoSearchbar"
             android:layout_width="50dp"
@@ -68,7 +69,8 @@
             android:inputType="text"
             android:maxLines="1"
             android:textColor="#000"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:visibility="visible" />
 
         <Spinner
             android:id="@+id/spinner_antennas"

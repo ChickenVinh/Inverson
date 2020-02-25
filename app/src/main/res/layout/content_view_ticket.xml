@@ -8,22 +8,20 @@
     tools:context=".ViewTicketActivity"
     tools:showIn="@layout/activity_view_ticket">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context=".CreateTicket"
-        tools:showIn="@layout/activity_create_ticket">
+        android:orientation="vertical">
 
         <HorizontalScrollView
+            android:id="@+id/viewImgGallery"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp">
 
 
             <LinearLayout
-                android:id="@+id/create_tick_Layout"
+                android:id="@+id/viewTicketImgLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:animateLayoutChanges="true"
@@ -43,6 +41,7 @@
             android:id="@+id/txtCommentEdit"
             android:layout_width="match_parent"
             android:layout_height="181dp"
+            android:layout_below="@id/viewImgGallery"
             android:ems="10"
             android:enabled="true"
             android:gravity="start|top"
@@ -51,5 +50,14 @@
             android:maxLength="4000"
             android:textColor="@color/common_google_signin_btn_text_dark_focused" />
 
-    </LinearLayout>
+        <Button
+            android:id="@+id/btnCloseTicket"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@color/colorDismiss"
+            android:onClick="closeTicket"
+            android:text="@string/close_ticket_button" />
+
+    </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
