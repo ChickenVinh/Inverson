@@ -15,6 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -22,7 +23,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Looper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -31,6 +32,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -54,6 +56,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -62,24 +67,26 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+import com.stfalcon.imageviewer.StfalconImageViewer;
+import com.stfalcon.imageviewer.loader.ImageLoader;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -98,23 +105,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     private static final int CREATE_TICKET_REQUEST = 69;
     private static final int EDIT_TICKET_REQUEST = 96;
+    static final int REQUEST_IMAGE_CAPTURE = 88;
+    private int maxDistance;
     private GoogleMap mMap;
     private View mapView;
     private FusedLocationProviderClient fusedLocationClient;
-    private Context context = this;
+    private Location mLocation;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
     private SharedPreferences sharedPreferences;
     private ClusterManager<Antenna> mClusterManager;
     private ArrayList<Antenna> mAntennaCollection = new ArrayList<>();
     private ArrayList<String> antennaWithTickets = new ArrayList<>();
-    private String mUser;
+    private String mUser, titlePicUrl;
     private Antenna selectedAntenna = null;
     TextView bottomSheetTextView;
     View bottomSheet;
     BottomSheetBehavior behavior;
     ProgressDialog progressDialog;
     ProgressBar progressMaps;
-    private String currentPhotoPath;
-
+    Uri photoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,10 +141,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         progressMaps = findViewById(R.id.progressMaps);
-
-
-        //Download Antennas
-        //downloadCSV();
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(5*1000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setFastestInterval(500);
+        locationRequest.setSmallestDisplacement(10); //10 meters
+        maxDistance = getResources().getInteger(R.integer.fence_radius);
         getAndParseAntennas();
         //setting up some Views
         setupBottomSheet();
@@ -164,8 +176,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //behavior.setState(BottomSheetBehaviorGoogleMapsLike.STATE_COLLAPSED);
             }
         });
-        mMap.setMinZoomPreference(5f);
+        mMap.setMinZoomPreference(6f);
         mMap.setMyLocationEnabled(true);
+        mMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(8.486658, 102.931800),new LatLng(23.650701, 109.592596)));
         if (mapView != null &&
                 mapView.findViewById(Integer.parseInt("1")) != null) {
             // Get the button view
@@ -200,7 +213,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onSuccess(Location location) {
                         // Got last known location. In some rare situations this can be null.
                         if (location != null) {
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),12f));
+                            mLocation = location;
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),DEFAULT_ZOOM));
                         }else{
                             // Show Vietnam
                             LatLng vietnam = new LatLng(16, 106.5);
@@ -208,6 +222,106 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
                 });
+
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CREATE_TICKET_REQUEST) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                String result = data.getStringExtra("result");
+                Snackbar.make(findViewById(R.id.mapsCoordLayout), "SUCCESS!"+result, Snackbar.LENGTH_SHORT)
+                        .setAction("Action", null).show();
+            }else if (resultCode == RESULT_FIRST_USER) {
+                String result = data.getStringExtra("result");
+                Snackbar.make(findViewById(R.id.mapsCoordLayout), "OFFLINE!"+result, Snackbar.LENGTH_SHORT)
+                        .setAction("Action", null).show();
+            }
+        }else if(requestCode == EDIT_TICKET_REQUEST){
+            if (resultCode == RESULT_OK) {
+                //-1\0\1 - error\nothing edited\success edit
+                int result = data.getIntExtra("result",0);
+                if(result == -1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "ERROR uploading Changes!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }else if(result == 1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket edited!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }
+                int closed = data.getIntExtra("closed", 0);
+                if(closed == 1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket closed!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }else if(closed == -1){
+                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket not closed!", Snackbar.LENGTH_SHORT)
+                            .setAction("Action", null).show();
+                }
+            }
+        }else if(requestCode == REQUEST_IMAGE_CAPTURE){
+            try {
+                Snackbar.make(findViewById(R.id.mapsCoordLayout), "Sending Picture...", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Action", null).show();
+                final JSONObject json = new JSONObject();
+                //Bitmap bmp = MediaStore.Images.Media.getBitmap(this.getContentResolver(), photoUri);
+
+
+
+                String url = getResources().getString(R.string.antennaTitleImageScript);
+                final StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                        new Response.Listener<String>()
+                        {
+                            @Override
+                            public void onResponse(String response) {
+                                Snackbar.make(findViewById(R.id.mapsCoordLayout), "Sending Success", Snackbar.LENGTH_SHORT)
+                                        .setAction("Action", null).show();
+                                final ImageView titlePic = findViewById(R.id.bottom_sheet_pic);
+                                Picasso.get().load(response).fit().into(titlePic);
+                            }
+                        },
+                        new Response.ErrorListener()
+                        {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Snackbar.make(findViewById(R.id.mapsCoordLayout), "Sending Failed", Snackbar.LENGTH_SHORT)
+                                        .setAction("Action", null).show();
+                            }
+                        }
+                ) {
+                    @Override
+                    protected Map<String, String> getParams()
+                    {
+                        Map<String, String>  params = new HashMap<String, String>();
+                        params.put("data", json.toString());
+
+                        return params;
+                    }
+                };
+                Picasso.get().load(photoUri).resize(1000, 1000).centerInside().into(new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                        String b64 = ImageHandler.getBASE64(bitmap);
+                        try {
+                            json.put("antenna_id", selectedAntenna.getTitle());
+                            json.put("imgdata64", b64);
+                            RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(postRequest);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    @Override
+                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                    }
+                    @Override
+                    public void onPrepareLoad(Drawable placeHolderDrawable) {
+                    }
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
     //PERMISSION STUFF
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -326,6 +440,61 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         //behavior.setCollapsible(false);
+
+        final ImageView titlePic = findViewById(R.id.bottom_sheet_pic);
+        titlePic.setOnLongClickListener(new View.OnLongClickListener() {
+
+            @Override
+            public boolean onLongClick(View v) {
+                createPicture();
+
+                return true;
+            }
+        });
+        titlePic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                try {
+                    List<String> PATH = new ArrayList<>();
+                    PATH.add(titlePicUrl);
+                    StfalconImageViewer.Builder stf = new StfalconImageViewer.Builder<>(getApplicationContext(), PATH, new ImageLoader<String>() {
+                        @Override
+                        public void loadImage(ImageView imageView, String image) {
+                            Picasso.get().load(image).into(imageView);
+                        }
+
+                    });
+                    stf.show();
+               /*             //(this, Arrays.asList(titlePicUrl)), { v, image -> Picasso.get().load(image).into(view)};
+                Picasso.get().load(titlePicUrl).into(new Target() {
+                            @Override
+                            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                                final ArrayList<Bitmap> tmp = new ArrayList<>();
+                                tmp.add(bitmap);
+                                new StfalconImageViewer.Builder<>(getBaseContext(), tmp, new ImageLoader<Bitmap>() {
+                                    @Override
+                                    public void loadImage(ImageView imageView, Bitmap image) {
+                                        imageView.setImageBitmap(image);
+                                    }
+                                }).show();
+                            }
+                            @Override
+                            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                            }
+                            @Override
+                            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                            }
+                        });*/
+                }catch (Exception ex){
+                    ex.printStackTrace();
+                    //Toast.makeText(getBaseContext(),"Error while opening.",Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+    private void createPicture(){
+        ImageHandler imageHandler = new ImageHandler(this);
+        photoUri = imageHandler.dispatchTakePictureIntent();
     }
     private void grabAllAntennaData(String antenna_id){
         String url = getResources().getString(R.string.getAntennaDataScript)
@@ -354,6 +523,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+    private void getAntennaTitleImage(){
+        String url = getResources().getString(R.string.antennaTitleImageScript)
+                +"?antenna_id=" + selectedAntenna.getTitle();
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if(!response.isEmpty()) {
+                            ImageView titlePic = findViewById(R.id.bottom_sheet_pic);
+                            titlePicUrl = response;
+                            Picasso.get().load(response).fit().into(titlePic);
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(stringRequest);
+    }
     //DISPLAY ANTENNA-DATA ON BOTTOMSHEET
     private void displayAntenna(Antenna item){
         grabAllAntennaData(item.getTitle());
@@ -380,6 +570,58 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         extTitle.setText(item.getExtTitle());
         Title.setText(item.getTitle());
         Address.setText(item.getAddress());
+
+        getAntennaTitleImage();
+        fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            mLocation = location;
+                            displayDistance(location);
+                        }
+                    }
+                });
+    }
+    private void monitorLocationChange(){
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult != null && selectedAntenna != null) {
+                    for (Location location : locationResult.getLocations()) {
+                        mLocation = location;
+                        displayDistance(location);
+                    }
+                }
+            }
+        };
+    }
+    private void displayDistance(Location mylocation){
+        TextView txtDistance = findViewById(R.id.txtDistance);
+        Button btnTicket = findViewById(R.id.btnCreateTicket);
+        float[] results = new float[1];
+        Location.distanceBetween(mylocation.getLatitude(),
+                mylocation.getLongitude(),
+                selectedAntenna.getPosition().latitude,
+                selectedAntenna.getPosition().longitude,
+                results);
+        if(results[0] < 5000) {
+            txtDistance.setText(String.format(Locale.US,"%.2f m", results[0]));
+        }else{
+            txtDistance.setText(getResources().getString(R.string.maxDistance));
+        }
+        if(results[0] < maxDistance){
+            //activate Button && paint dinstance green
+            btnTicket.setEnabled(true);
+            txtDistance.setTextColor(Color.GREEN);
+        }else{
+            btnTicket.setEnabled(false);
+            txtDistance.setTextColor(getColor(R.color.transWhite));
+        }
+    }
+    private void startLocationUpdates() {
+        fusedLocationClient.requestLocationUpdates(locationRequest,
+                locationCallback,
+                Looper.getMainLooper());
     }
     private void addAntennasToCollection(ArrayList<Antenna> tmp_ant){
         if(tmp_ant.size()>0) {
@@ -484,22 +726,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         requestCameraPermission();
     }
-    //CREATING EMPTY IMG FILE
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        currentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
     //KEYBOARD HIDE
     public void hideSoftKeyboard(){
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -524,9 +750,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 //BUILD UP LAYOUT---------
                 final RelativeLayout layPrev = new RelativeLayout(this);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    layPrev.setElevation(5f);
-                }
                 int[] attrs = new int[]{R.attr.selectableItemBackground};
                 TypedArray typedArray = this.obtainStyledAttributes(attrs);
                 int backgroundResource = typedArray.getResourceId(0, 0);
@@ -639,12 +862,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         //layPrev.setBackgroundColor(Color.TRANSPARENT);
                     }
                 });
-
             }
         }catch (Exception ex){
             ex.printStackTrace();
         }
     }
+
     //Convert DP input to Pixels
     private int DPtoPX(int dp){
         int px = (int) TypedValue.applyDimension(
@@ -663,55 +886,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         requestCameraPermission();
     }
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check which request we're responding to
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CREATE_TICKET_REQUEST) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-                String result = data.getStringExtra("result");
-                Snackbar.make(findViewById(R.id.mapsCoordLayout), "SUCCESS!"+result, Snackbar.LENGTH_SHORT)
-                        .setAction("Action", null).show();
-            }else if (resultCode == RESULT_FIRST_USER) {
-                String result = data.getStringExtra("result");
-                Snackbar.make(findViewById(R.id.mapsCoordLayout), "OFFLINE!"+result, Snackbar.LENGTH_SHORT)
-                        .setAction("Action", null).show();
-            }
-        }else if(requestCode == EDIT_TICKET_REQUEST){
-            if (resultCode == RESULT_OK) {
-                //-1\0\1 - error\nothing edited\success edit
-                int result = data.getIntExtra("result",0);
-                if(result == -1){
-                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "ERROR uploading Changes!", Snackbar.LENGTH_SHORT)
-                            .setAction("Action", null).show();
-                }else if(result == 1){
-                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket edited!", Snackbar.LENGTH_SHORT)
-                            .setAction("Action", null).show();
-                }
-                int closed = data.getIntExtra("closed", 0);
-                if(closed == 1){
-                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket closed!", Snackbar.LENGTH_SHORT)
-                            .setAction("Action", null).show();
-                }else if(closed == -1){
-                    Snackbar.make(findViewById(R.id.mapsCoordLayout), "Ticket not closed!", Snackbar.LENGTH_SHORT)
-                            .setAction("Action", null).show();
-                }
-            }
-        }
+    protected void onPause() {
+        super.onPause();
+        fusedLocationClient.removeLocationUpdates(locationCallback);
     }
-
     @Override
     protected void onResume() {
         super.onResume();
+        monitorLocationChange();
+        startLocationUpdates();
         if (selectedAntenna != null) {
             displayAntenna(selectedAntenna);
         }
-
     }
     private void superBack(){
         super.onBackPressed();
     }
-
     @Override
     public void onBackPressed() {
         if(RequestQueueSingleton.getInstance(getApplicationContext()).getCacheLength() > 0){
@@ -720,7 +910,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             super.onBackPressed();
         }
     }
-
     private void showClosingDialog(){
         DialogInterface.OnClickListener closingTicketdialogClickListener = new DialogInterface.OnClickListener() {
             @Override
@@ -739,17 +928,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         builder.setMessage("There are Unsaved Tickets. You will lose them!").setPositiveButton("Yes", closingTicketdialogClickListener)
                 .setNegativeButton("No", closingTicketdialogClickListener).show();
     }
-    public void updateApp(View view) {
-        requestStoragePermission();
-        try {
-            UpdateManager updateManager = new UpdateManager(getApplicationContext(),"http://gastroconsultung-catering.com/update/Iverson-0.5.1.apk");
-            updateManager.enqueueDownload();
-        }catch(Exception ex){
-            ex.printStackTrace();
-        }
-
-
-    }
     private void sendLocationRequest(){
         Snackbar.make(findViewById(R.id.mapsCoordLayout), "Sending new Location...", Snackbar.LENGTH_LONG)
                 .setAction("SEND", null).show();
@@ -764,14 +942,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 .title(selectedAntenna.getExtTitle() + " - New Location")
         ).setSnippet("Needs approval from admins.");
 
+        PolylineOptions line=
+                new PolylineOptions().add(new_pos,old_pos)
+                        .width(5).color(Color.GREEN);
+
+        mMap.addPolyline(line);
+
         String url = getResources().getString(R.string.requestNewLocationScript);
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {
                     @Override
                     public void onResponse(String response) {
-                        Snackbar.make(findViewById(R.id.mapsCoordLayout), response, Snackbar.LENGTH_SHORT)
+                        Snackbar.make(findViewById(R.id.mapsCoordLayout), "Finished sending!", Snackbar.LENGTH_SHORT)
                                 .setAction("SEND", null).show();
+                        behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
                         Log.d("Response", response);
                     }
                 },
@@ -781,6 +966,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response", error.getMessage());
                         Toast.makeText(getApplicationContext(), "Network Error @ Sending request", Toast.LENGTH_SHORT).show();
+                        behavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
                     }
                 }
         ) {
@@ -812,18 +998,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }).show();
 
         newPin.setVisibility(View.VISIBLE);
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()),14));
-                        }
-                    }
-                });
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(selectedAntenna.getPosition(),14));
 
 
+    }
+    public void makeAllAntennasEditable(View view) {
+        if(mUser.equals("admin")) {
+            maxDistance = 42000;
+            displayAntenna(selectedAntenna);
+        }
+    }
+
+    public void logout(View view) {
+        sharedPreferences.edit().clear().apply();
+        getSharedPreferences("login", Context.MODE_PRIVATE).edit().clear().apply();
+        finishAffinity();
+        startActivity(new Intent(this, LoginActivity.class));
     }
 
     //CUSTOM_MARKER_ICON
@@ -837,7 +1027,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             mContext = context;
         }
-
         @Override protected void onBeforeClusterItemRendered(Antenna item,
                                                              MarkerOptions markerOptions) {
             if(antennaWithTickets.contains(item.getTitle())) {
@@ -845,7 +1034,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }else{
                 markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_antenna_icon)).snippet(item.getTitle());
             }
-
         }
     }
 
