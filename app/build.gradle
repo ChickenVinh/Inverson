@@ -9,8 +9,8 @@ android {
         applicationId "com.mahc.custombottomsheet"
         minSdkVersion rootProject.minSdkVersion
         targetSdkVersion rootProject.targetSdkVersion
-        versionCode 4
-        versionName "0.5.3"
+        versionCode 5
+        versionName "0.5.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         useLibrary 'org.apache.http.legacy'

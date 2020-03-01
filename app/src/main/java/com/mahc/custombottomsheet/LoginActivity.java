@@ -1,8 +1,10 @@
 package com.mahc.custombottomsheet;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -15,6 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -31,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
+    private final int REQUEST_LOCATION_PERMISSION = 1;
     SharedPreferences sharedpreferences;
     // UI references.
     private AutoCompleteTextView mEmailView;
@@ -56,6 +61,7 @@ public class LoginActivity extends AppCompatActivity {
         txtV.setText(BuildConfig.VERSION_NAME);
 
         checkForUpdate(mEmailView);
+        requestLocationPermission();
 
         //if already logged in
         if (sharedpreferences.contains("user") && sharedpreferences.contains("pw")) {
@@ -109,6 +115,35 @@ public class LoginActivity extends AppCompatActivity {
         //mPasswordView.setText("admin");
         //attemptLogin();
     }
+
+    private void requestLocationPermission() {
+        mLoginFormView.setVisibility(View.GONE);
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        }else{
+            mLoginFormView.setVisibility(View.VISIBLE);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_LOCATION_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mLoginFormView.setVisibility(View.VISIBLE);
+
+                }
+            }
+        }
+    }
     void startUpdate(String url){
         UpdateManager updateManager = new UpdateManager(getApplicationContext(), url);
         updateManager.enqueueDownload();
@@ -120,8 +155,6 @@ public class LoginActivity extends AppCompatActivity {
      * receives a URL of newer APK
      */
     public void checkForUpdate(View view){
-        showProgress(true);
-
         String versionName = BuildConfig.VERSION_NAME;
         String url = getResources().getString(R.string.versionScript)
                 + "?version=" + versionName;
@@ -129,7 +162,9 @@ public class LoginActivity extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        if(!response.trim().isEmpty()) {
+                        boolean isAPK = response.contains("apk");
+                        if(!response.trim().isEmpty() && isAPK) {
+                            showProgress(true);
                             startUpdate(response);
                         }
                         showProgress(false);
@@ -137,7 +172,7 @@ public class LoginActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                showProgress(false);
+
             }
         });
         RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
@@ -252,5 +287,9 @@ public class LoginActivity extends AppCompatActivity {
     private void showProgress(final boolean show) {
         mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    public void passwordForgot(View view) {
+
     }
 }

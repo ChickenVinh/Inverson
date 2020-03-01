@@ -44,6 +44,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.widget.NestedScrollView;
@@ -338,22 +340,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        // Forward results to EasyPermissions
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_LOCATION_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length <= 0
+                        || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    logout(mapView);
+                }
+            }
+        }
     }
     @AfterPermissionGranted(REQUEST_LOCATION_PERMISSION)
     public void requestLocationPermission() {
-        boolean granted = false;
-        while (!granted) {
-            String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
-            if (!EasyPermissions.hasPermissions(this, perms)) {
-                EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
-            }else{
-                granted = true;
-            }
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
         }
     }
     public void requestStoragePermission() {
@@ -1004,7 +1012,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     public void makeAllAntennasEditable(View view) {
         if(mUser.equals("admin")) {
-            maxDistance = 42000;
+            maxDistance = Integer.MAX_VALUE;
             displayAntenna(selectedAntenna);
         }
     }

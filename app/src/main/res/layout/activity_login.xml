@@ -22,7 +22,8 @@
         android:layout_height="150dp"
         android:layout_below="@id/logoLogin"
         android:layout_centerInParent="true"
-        android:src="@drawable/sinusanimation" />
+        android:src="@drawable/sinusanimation"/>
+
 
     <ImageView
         android:id="@+id/logoLogin"
@@ -78,6 +79,15 @@
             android:layout_marginTop="16dp"
             android:text="@string/action_sign_in"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:onClick="passwordForgot"
+            android:textAlignment="center"
+            tools:text="@string/forgotPasswort" />
 
     </LinearLayout>
 

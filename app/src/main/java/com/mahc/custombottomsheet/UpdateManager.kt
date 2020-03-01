@@ -30,8 +30,11 @@ class UpdateManager(private val context: Context, private val url: String) {
     fun enqueueDownload() {
         setupPermissions()
 
-        var destination =
-                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString() + "/"
+
+        val externalFilesDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                ?: throw IllegalStateException("Couldn't access filesystem!")
+
+        var destination = "$externalFilesDir/"
         destination += FILE_NAME
         val uri = Uri.parse("$FILE_BASE_PATH$destination")
         val file = File(destination)

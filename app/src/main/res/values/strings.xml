@@ -16,11 +16,7 @@
     <string name="error_field_required">This field is required</string>
     <string name="error_antenna_not_found">Antenna not Found!</string>
     <string name="searchbar_hint">Enter ID, Address or City</string>
-    <string name="Object1">Object-1</string>
-    <string name="Object2">Object-2</string>
-    <string name="Object3">Object-3</string>
-    <string name="Object4">Object-4</string>
-    <string name="Object5">Object-5</string>
+    <string name="forgotPasswort">Forgot Password?</string>
 
     <string name="title_activity_object">ObjectActivity</string>
     <string name="tab_text_1">Object 1</string>
