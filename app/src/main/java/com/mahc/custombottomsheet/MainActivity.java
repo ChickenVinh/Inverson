@@ -15,7 +15,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -24,6 +23,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -78,7 +78,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 import com.stfalcon.imageviewer.StfalconImageViewer;
 import com.stfalcon.imageviewer.loader.ImageLoader;
 
@@ -86,6 +85,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,6 +104,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int DEFAULT_ZOOM = 12;
     private final int REQUEST_LOCATION_PERMISSION = 1;
     private final int REQUEST_STORAGE_PERMISSION = 2;
+    private final int REQUEST_CAMERA_PERMISSION = 3;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     private static final int CREATE_TICKET_REQUEST = 69;
     private static final int EDIT_TICKET_REQUEST = 96;
@@ -156,6 +157,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Permission stuff
         requestLocationPermission();
+        while(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -294,32 +296,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     protected Map<String, String> getParams()
                     {
+                        try {
+                            Bitmap bmp = MediaStore.Images.Media.getBitmap(getContentResolver(), photoUri);
+                            String b64 = ImageHandler.getBASE64(bmp);
+                            json.put("antenna_id", selectedAntenna.getTitle());
+                            json.put("imgdata64", b64);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+
                         Map<String, String>  params = new HashMap<String, String>();
                         params.put("data", json.toString());
 
                         return params;
                     }
                 };
-                Picasso.get().load(photoUri).resize(1000, 1000).centerInside().into(new Target() {
-                    @Override
-                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                        String b64 = ImageHandler.getBASE64(bitmap);
-                        try {
-                            json.put("antenna_id", selectedAntenna.getTitle());
-                            json.put("imgdata64", b64);
-                            RequestQueueSingleton.getInstance(getApplicationContext()).addToRequestQueue(postRequest);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    @Override
-                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                    }
-                    @Override
-                    public void onPrepareLoad(Drawable placeHolderDrawable) {
-                    }
-                });
-
+                RequestQueueSingleton.getInstance(getApplication()).addToRequestQueue(postRequest);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -328,15 +320,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //PERMISSION STUFF
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void requestCameraPermission(){
-        boolean granted = false;
-        while(!granted) {
-            if (checkSelfPermission(Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.CAMERA},
-                        MY_CAMERA_REQUEST_CODE);
-            } else {
-                granted = true;
-            }
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION);
         }
     }
     @Override
@@ -348,6 +339,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 if (grantResults.length <= 0
                         || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                     logout(mapView);
+                }
+            }
+            case REQUEST_CAMERA_PERMISSION: {
+                if (grantResults.length <= 0
+                        || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.error_camera_permission), Toast.LENGTH_LONG).show();
+                    requestCameraPermission();
                 }
             }
         }
@@ -501,8 +499,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
     private void createPicture(){
-        ImageHandler imageHandler = new ImageHandler(this);
-        photoUri = imageHandler.dispatchTakePictureIntent();
+        requestCameraPermission();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            ImageHandler imageHandler = new ImageHandler(this);
+            photoUri = imageHandler.dispatchTakePictureIntent();
+        }
     }
     private void grabAllAntennaData(String antenna_id){
         String url = getResources().getString(R.string.getAntennaDataScript)
@@ -865,9 +866,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     @RequiresApi(api = Build.VERSION_CODES.M)
                     @Override
                     public void onClick(View view) {
-                        //layPrev.setBackgroundColor(Color.LTGRAY);
                         startObjectActivity(layPrev, jTicketObj);
-                        //layPrev.setBackgroundColor(Color.TRANSPARENT);
                     }
                 });
             }
@@ -890,7 +889,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         intent.putExtra("antenna",selectedAntenna);
 
         startActivityForResult(intent,CREATE_TICKET_REQUEST);
-
         requestCameraPermission();
     }
     @Override

@@ -134,21 +134,6 @@ public class CreateTicket extends AppCompatActivity {
             }
         });
     }
-    private void addImgToView(Bitmap bmp){
-        LinearLayout linearLayout = findViewById(R.id.create_tick_Layout);
-        ImageView img = new ImageView(this);
-        img.setLayoutParams(new LinearLayout.LayoutParams((int)this.getResources().getDisplayMetrics().density * 150,
-                LinearLayout.LayoutParams.MATCH_PARENT));
-        img.setId(imgList.size());
-        img.setImageBitmap(bmp);
-        img.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                openImageFull(imgList.toArray(new Bitmap[0]),v.getId());
-            }
-        });
-
-        linearLayout.addView(img,1);
-    }
     private void openImageFull(final Bitmap[] imgList, int index){
         try {
             new StfalconImageViewer.Builder<>(this, imgList, new ImageLoader<Bitmap>() {
@@ -163,10 +148,8 @@ public class CreateTicket extends AppCompatActivity {
         }
     }
     public void dispatchTakePictureIntent(View view) {
-
         photoHandler = new ImageHandler(this);
         imgUri = photoHandler.dispatchTakePictureIntent();
-
     }
     void getAndSaveBMP(){
         try {

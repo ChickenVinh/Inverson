@@ -113,8 +113,8 @@ public class ImageHandler {
         return image;
     }
 
-    public String getCurrentPhotoPath(){
-        return currentPhotoPath;
+    public Bitmap getBitmapFromUri(Uri uri) throws IOException {
+        return MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
     }
 
 }

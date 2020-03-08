@@ -17,6 +17,7 @@
     <string name="error_antenna_not_found">Antenna not Found!</string>
     <string name="searchbar_hint">Enter ID, Address or City</string>
     <string name="forgotPasswort">Forgot Password?</string>
+    <string name="error_camera_permission">You need to grand camera permissions!</string>
 
     <string name="title_activity_object">ObjectActivity</string>
     <string name="tab_text_1">Object 1</string>
@@ -26,32 +27,16 @@
     <string name="cross_placeholder">__HASHTAG__</string>
 
     <string name="close_ticket_button">Close Ticket</string>
-    <!--
-    <string name="server_url">http://gastroconsultung-catering.com/</string>
-    <string name="server_login_url">http://gastroconsultung-catering.com/scripts/login.php</string>
-    <string name="upload_script">http://gastroconsultung-catering.com/scripts/upload.php</string>
-    <string name="comment_script">http://gastroconsultung-catering.com/scripts/comment.php</string>
-    <string name="module_script_URL">http://gastroconsultung-catering.com/scripts/getLatest.php</string>
-    <string name="statusScript">http://gastroconsultung-catering.com/scripts/set_status.php</string>
-    <string name="URL_antennasCSV">http://gastroconsultung-catering.com/infos.csv</string>
-    <string name="URL_antennas">http://gastroconsultung-catering.com/scripts/getAllAntennas.php</string>
-    <string name="close_ticket">http://gastroconsultung-catering.com/closeTicket.php</string>
-    <string name="picture_script">http://gastroconsultung-catering.com/scripts/set_picture.php</string>
 
-    <string name="parseTicketScript">http://gastroconsultung-catering.com/parseTicket.php</string>
-    <string name="getAntennaDataScript">http://gastroconsultung-catering.com/getAntennaData.php</string>
-    <string name="versionScript">http://gastroconsultung-catering.com/update.php</string>
-    <string name="getAntennaScript">http://gastroconsultung-catering.com/update.php</string>
--->
-    <string name="server_url">https://vtk-group.tech/</string>
-    <string name="server_login_url">https://vtk-group.tech/scripts/login.php</string>
-    <string name="parseTicketScript">https://vtk-group.tech/scripts/parseTicket.php</string>
-    <string name="getAntennaDataScript">https://vtk-group.tech/scripts/getAntennaData.php</string>
-    <string name="versionScript">https://vtk-group.tech/scripts/update.php</string>
-    <string name="getAntennaScript">https://vtk-group.tech/scripts/getAntenna.php</string>
-    <string name="close_ticket">https://vtk-group.tech/scripts/closeTicket.php</string>
-    <string name="requestNewLocationScript">https://vtk-group.tech/scripts/requestLocation.php</string>
-    <string name="antennaTitleImageScript">https://vtk-group.tech/scripts/antennaTitleImage.php</string>
+    <string name="server_url">https://vtkgroup.tech/</string>
+    <string name="server_login_url">https://vtkgroup.tech/scripts/login.php</string>
+    <string name="parseTicketScript">https://vtkgroup.tech/scripts/parseTicket.php</string>
+    <string name="getAntennaDataScript">https://vtkgroup.tech/scripts/getAntennaData.php</string>
+    <string name="versionScript">https://vtkgroup.tech/scripts/update.php</string>
+    <string name="getAntennaScript">https://vtkgroup.tech/scripts/getAntenna.php</string>
+    <string name="close_ticket">https://vtkgroup.tech/scripts/closeTicket.php</string>
+    <string name="requestNewLocationScript">https://vtkgroup.tech/scripts/requestLocation.php</string>
+    <string name="antennaTitleImageScript">https://vtkgroup.tech/scripts/antennaTitleImage.php</string>
 
     <string-array name="module_array">
         <item>Cột</item>
