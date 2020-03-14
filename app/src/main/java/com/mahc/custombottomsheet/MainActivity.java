@@ -27,6 +27,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -43,12 +44,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+import androidx.core.view.GravityCompat;
 import androidx.core.widget.NestedScrollView;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.volley.Request;
@@ -74,6 +78,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
@@ -127,12 +132,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     BottomSheetBehavior behavior;
     ProgressDialog progressDialog;
     ProgressBar progressMaps;
+    DrawerLayout mDrawerLayout;
     Uri photoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_nav);
         this.registerReceiver(this.mConnReceiver,
                 new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         //Logger
@@ -144,12 +150,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         RequestQueue queue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         progressMaps = findViewById(R.id.progressMaps);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
         locationRequest = new LocationRequest();
         locationRequest.setInterval(5*1000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setFastestInterval(500);
         locationRequest.setSmallestDisplacement(10); //10 meters
         maxDistance = getResources().getInteger(R.integer.fence_radius);
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        View headerView = navigationView.getHeaderView(0);
+        TextView navUsername = headerView.findViewById(R.id.txtNavUser);
+        navUsername.setText(mUser);
+
         getAndParseAntennas();
         //setting up some Views
         setupBottomSheet();
@@ -719,7 +732,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         progressMaps.setVisibility(View.INVISIBLE);
     }
     //NAVIGATION INTENT
-    public void getDirectionsTo(View view) {
+    public void getDirectionsTo(MenuItem view) {
         Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
                 Uri.parse("https://www.google.com/maps/dir/?api=1&destination="+selectedAntenna.getPosition().latitude+","+selectedAntenna.getPosition().longitude));
         startActivity(intent);
@@ -990,7 +1003,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Add the request to the RequestQueue.
         RequestQueueSingleton.getInstance(this.getApplicationContext()).addToRequestQueue(postRequest);
     }
-    public void changeAntennaPosition(View view) {
+    public void changeAntennaPosition(MenuItem view) {
         final ImageView newPin = findViewById(R.id.newPin);
         behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         Snackbar.make(findViewById(R.id.mapsCoordLayout), "Choose a new Location for this Antenna!", Snackbar.LENGTH_INDEFINITE)
@@ -1008,9 +1021,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
-    public void makeAllAntennasEditable(View view) {
+    public void makeAllAntennasEditable(MenuItem view) {
         if(mUser.equals("admin")) {
             maxDistance = Integer.MAX_VALUE;
+            view.setEnabled(false);
             displayAntenna(selectedAntenna);
         }
     }
@@ -1021,6 +1035,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         finishAffinity();
         startActivity(new Intent(this, LoginActivity.class));
     }
+    public void showKebab(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenuInflater().inflate(R.menu.kebab_menu, popup.getMenu());
+        popup.show();
+    }
+
+    public void showAllAntennaData(MenuItem item) {
+    }
+
+    public void openDrawer(View view) {
+        mDrawerLayout.openDrawer(GravityCompat.START);
+    }
+
 
     //CUSTOM_MARKER_ICON
     public class CustomClusterRenderer extends DefaultClusterRenderer<Antenna> {

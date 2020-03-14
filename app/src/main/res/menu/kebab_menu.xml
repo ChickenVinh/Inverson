@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:onClick="getDirectionsTo"
+        android:title="@string/menuNavigateTo" />
+    <item
+        android:onClick="changeAntennaPosition"
+        android:title="@string/menuEditLocation" />
+    <item
+        android:enabled="false"
+        android:onClick="showAllAntennaData"
+        android:title="@string/menuShowAntennaData" />
+</menu>
